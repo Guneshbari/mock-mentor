@@ -15,7 +15,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Spinner } from "@/components/ui/spinner";
-import { ChevronDown, ChevronUp, Mic, MicOff, User, Bot, Sparkles, Volume2, VolumeX, Square } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ChevronDown, ChevronUp, Mic, MicOff, User, Bot, Sparkles, Volume2, VolumeX, Square, RotateCcw, TrendingUp, CheckCircle2 } from "lucide-react";
 import type { InterviewConfiguration } from "./interview-setup";
 
 interface QuestionAudio {
@@ -79,8 +80,23 @@ export function InterviewSessionPanel({
   const [isAudioModeEnabled, setIsAudioModeEnabled] = useState(interviewConfig.audioMode || false);
   const [isMemoryPanelOpen, setIsMemoryPanelOpen] = useState(true);
   const [questionAnswerHistory, setQuestionAnswerHistory] = useState<
-    { question: string; answer: string; summary: string }[]
+    { question: string; answer: string; summary: string; score?: number }[]
   >([]);
+
+  // Restart confirmation dialog
+  const [showRestartDialog, setShowRestartDialog] = useState(false);
+
+  // Last evaluation for immediate feedback
+  const [lastEvaluation, setLastEvaluation] = useState<{
+    score: number;
+    feedback: string;
+    breakdown?: {
+      completeness: number;
+      technicalAccuracy: number;
+      depth: number;
+      clarity: number;
+    };
+  } | null>(null);
 
   // Audio state
   const [isRecording, setIsRecording] = useState(false);
@@ -138,7 +154,17 @@ export function InterviewSessionPanel({
   const startRecording = async () => {
     try {
       setAudioError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Enhanced audio constraints for noise filtering and voice isolation
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,        // Reduces echo
+          noiseSuppression: true,        // Filters background noise
+          autoGainControl: true,         // Normalizes volume
+          sampleRate: 16000,             // Sufficient for speech (reduces file size)
+          channelCount: 1                // Mono audio (sufficient for voice)
+        }
+      });
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus'
@@ -234,12 +260,16 @@ export function InterviewSessionPanel({
       const transcribedAnswer = data.transcribedAnswer || candidateAnswer || "(Audio answer)";
       setTranscriptionPreview("");
 
+      // Store evaluation for immediate feedback
+      storeEvaluation(data);
+
       const newAnswerEntry = {
         question: currentQuestion,
         answer: transcribedAnswer,
         summary: transcribedAnswer.length > 60
           ? `${transcribedAnswer.substring(0, 60)}...`
           : transcribedAnswer,
+        score: data.evaluation?.score || 0,
       };
 
       const updatedHistory = [...questionAnswerHistory, newAnswerEntry];
@@ -290,6 +320,9 @@ export function InterviewSessionPanel({
 
       const data = await response.json();
 
+      // Store evaluation for immediate feedback
+      storeEvaluation(data);
+
       const newAnswerEntry = {
         question: currentQuestion,
         answer: candidateAnswer,
@@ -297,6 +330,7 @@ export function InterviewSessionPanel({
           candidateAnswer.length > 60
             ? `${candidateAnswer.substring(0, 60)}...`
             : candidateAnswer,
+        score: data.evaluation?.score || 0,
       };
 
       const updatedHistory = [...questionAnswerHistory, newAnswerEntry];
@@ -346,6 +380,44 @@ export function InterviewSessionPanel({
     }
   };
 
+  // Restart interview handler
+  const handleRestartInterview = () => {
+    window.location.href = '/';
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Enter to submit (when not in textarea and answer is not empty)
+      if (e.key === 'Enter' && e.ctrlKey && candidateAnswer.trim() && !isEvaluatingResponse && !isRecording) {
+        e.preventDefault();
+        handleSubmitAnswer();
+      }
+      // Esc to clear answer
+      if (e.key === 'Escape' && !isRecording && !isEvaluatingResponse) {
+        setCandidateAnswer('');
+        setLastEvaluation(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [candidateAnswer, isEvaluatingResponse, isRecording]);
+
+  // Store evaluation from response
+  const storeEvaluation = (data: any) => {
+    if (data.evaluation) {
+      setLastEvaluation({
+        score: data.evaluation.score || 0,
+        feedback: data.evaluation.feedback || '',
+        breakdown: data.evaluation.breakdown
+      });
+
+      // Auto-hide evaluation after 5 seconds
+      setTimeout(() => setLastEvaluation(null), 5000);
+    }
+  };
+
   return (
     <div className="min-h-screen page-gradient-bg p-4 lg:p-6">
       <div className="max-w-6xl mx-auto animate-fade-in">
@@ -363,13 +435,24 @@ export function InterviewSessionPanel({
                       AI Interviewer
                     </CardTitle>
                   </div>
-                  <Badge
-                    variant="outline"
-                    className="adaptive-questioning-badge text-xs font-medium border-primary/50 text-primary bg-primary/5 glow-effect"
-                  >
-                    <Sparkles className="h-3 w-3 mr-1" />
-                    Adaptive Questioning
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className="adaptive-questioning-badge text-xs font-medium border-primary/50 text-primary bg-primary/5 glow-effect"
+                    >
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      Adaptive Questioning
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowRestartDialog(true)}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                      Restart
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
@@ -520,6 +603,47 @@ export function InterviewSessionPanel({
                 )}
               </CardContent>
             </Card>
+
+            {/* Real-Time Evaluation Display */}
+            {lastEvaluation && (
+              <Card className="evaluation-card shadow-lg border-l-4 border-l-success bg-card/95 backdrop-blur-sm animate-fade-in">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-5 w-5 text-success" />
+                      <h3 className="text-sm font-semibold text-foreground">Answer Evaluated</h3>
+                    </div>
+                    <Badge
+                      variant={lastEvaluation.score >= 75 ? "default" : lastEvaluation.score >= 50 ? "secondary" : "destructive"}
+                      className="text-base px-3 py-1"
+                    >
+                      {lastEvaluation.score}/100
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{lastEvaluation.feedback}</p>
+                  {lastEvaluation.breakdown && (
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Completeness: {lastEvaluation.breakdown.completeness}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Accuracy: {lastEvaluation.breakdown.technicalAccuracy}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Depth: {lastEvaluation.breakdown.depth}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Clarity: {lastEvaluation.breakdown.clarity}</span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Side Panel - Interview Memory */}
@@ -555,9 +679,19 @@ export function InterviewSessionPanel({
                           <div key={index} className="memory-item">
                             {index > 0 && <Separator className="mb-3" />}
                             <div className="flex flex-col gap-1">
-                              <p className="text-xs font-medium text-primary">
-                                Q{index + 1}
-                              </p>
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-medium text-primary">
+                                  Q{index + 1}
+                                </p>
+                                {item.score !== undefined && (
+                                  <Badge
+                                    variant={item.score >= 75 ? "default" : item.score >= 50 ? "secondary" : "destructive"}
+                                    className="text-xs h-5"
+                                  >
+                                    {item.score}
+                                  </Badge>
+                                )}
+                              </div>
                               <p className="text-sm text-foreground font-medium line-clamp-2">
                                 {item.question}
                               </p>
@@ -612,6 +746,18 @@ export function InterviewSessionPanel({
           </div>
         </div>
       </div>
+
+      {/* Restart Confirmation Dialog */}
+      <ConfirmDialog
+        open={showRestartDialog}
+        onOpenChange={setShowRestartDialog}
+        title="Restart Interview?"
+        description="Are you sure you want to restart? Your current progress will be lost and you'll be taken back to the setup screen."
+        confirmText="Restart"
+        cancelText="Continue Interview"
+        onConfirm={handleRestartInterview}
+        variant="destructive"
+      />
     </div>
   );
 }

@@ -105,6 +105,16 @@ async function processAudioAnswer(audioBase64, mimeType = 'audio/webm') {
     const audioBuffer = Buffer.from(audioBase64, 'base64');
     console.log(`[Audio] Processing audio: ${audioBuffer.length} bytes`);
 
+    // Check if audio is too short (likely just noise)
+    if (audioBuffer.length < 10000) { // Less than ~10KB
+      console.log('[Audio] Audio too short, likely just noise');
+      return {
+        success: false,
+        error: 'Recording too short. Please speak clearly and try again.',
+        needsRetry: true
+      };
+    }
+
     // Determine file extension based on mime type
     const ext = mimeType.includes('webm') ? 'webm' :
       mimeType.includes('wav') ? 'wav' :
@@ -115,14 +125,16 @@ async function processAudioAnswer(audioBase64, mimeType = 'audio/webm') {
     fs.writeFileSync(tempPath, audioBuffer);
     console.log(`[Audio] Saved to temp file: ${tempPath}`);
 
-    // Use Groq's Whisper API for transcription (turbo for faster processing)
-    console.log('[Audio] Calling Groq Whisper API...');
+    // Use Groq's Whisper API for transcription with enhanced settings
+    console.log('[Audio] Calling Groq Whisper API with noise filtering...');
     const transcription = await groq.audio.transcriptions.create({
       file: fs.createReadStream(tempPath),
       model: 'whisper-large-v3-turbo', // Faster than whisper-large-v3
       response_format: 'text',
       language: 'en',
-      temperature: 0.0 // Lower temperature for more accurate transcription
+      temperature: 0.0, // Lower temperature for more accurate transcription
+      // Prompt to guide the model to focus on interview responses and ignore background noise
+      prompt: 'This is a professional interview response. Transcribe only clear human speech, ignoring background noise, music, or ambient sounds.'
     });
 
     console.log('[Audio] Transcription received');
@@ -137,13 +149,31 @@ async function processAudioAnswer(audioBase64, mimeType = 'audio/webm') {
 
     const transcribedText = typeof transcription === 'string' ? transcription : transcription.text;
 
-    if (!transcribedText || transcribedText.trim().length === 0) {
-      console.log('[Audio] Empty transcription result');
+    // Filter out very short transcriptions (likely noise)
+    if (!transcribedText || transcribedText.trim().length < 10) {
+      console.log('[Audio] Transcription too short or empty');
       return {
         success: false,
-        error: 'Could not transcribe audio. Please speak clearly and try again.',
+        error: 'Could not understand audio. Please speak more clearly and reduce background noise.',
         needsRetry: true
       };
+    }
+
+    // Check for repetitive patterns that indicate noise
+    const words = transcribedText.trim().toLowerCase().split(/\s+/);
+    if (words.length > 3) {
+      const uniqueWords = new Set(words);
+      const repetitionRatio = uniqueWords.size / words.length;
+
+      // If less than 30% unique words, it's likely repetitive noise
+      if (repetitionRatio < 0.3) {
+        console.log(`[Audio] High repetition detected (${(repetitionRatio * 100).toFixed(0)}% unique), likely background noise`);
+        return {
+          success: false,
+          error: 'Detected background noise or unclear audio. Please reduce noise and speak clearly.',
+          needsRetry: true
+        };
+      }
     }
 
     console.log(`[Audio] Success! Transcribed: "${transcribedText.substring(0, 50)}..."`);
