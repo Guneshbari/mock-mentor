@@ -29,9 +29,9 @@ interface QuestionAudio {
 }
 
 interface InterviewSessionPanelProps {
-  interviewConfig: InterviewConfiguration & { 
-    sessionId: string; 
-    firstQuestion: string; 
+  interviewConfig: InterviewConfiguration & {
+    sessionId: string;
+    firstQuestion: string;
     totalSteps: number;
     questionAudio?: QuestionAudio;
   };
@@ -49,8 +49,22 @@ export interface InterviewEvaluationResults {
   identifiedStrengths: string[];
   areasForImprovement: string[];
   actionableFeedback: string[];
-  questionAnswerHistory: { question: string; answer: string; summary: string }[];
+  questionAnswerHistory: {
+    question: string;
+    answer: string;
+    summary: string;
+    score?: number;
+    key_feedback?: string;
+  }[];
+  scoreCalculation?: string;
+  individualScores?: {
+    questionNumber: number;
+    score: number;
+    weight: number;
+    weightedScore: number;
+  }[];
 }
+
 
 
 export function InterviewSessionPanel({
@@ -125,11 +139,11 @@ export function InterviewSessionPanel({
     try {
       setAudioError(null);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
-      const mediaRecorder = new MediaRecorder(stream, { 
-        mimeType: 'audio/webm;codecs=opus' 
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
       });
-      
+
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -155,7 +169,7 @@ export function InterviewSessionPanel({
     return new Promise<string>((resolve) => {
       mediaRecorderRef.current!.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        
+
         // Convert to base64
         const reader = new FileReader();
         reader.readAsDataURL(audioBlob);
@@ -369,8 +383,8 @@ export function InterviewSessionPanel({
                     Question Progress
                   </span>
                   <div className="flex-1 relative">
-                    <Progress 
-                      value={interviewProgress} 
+                    <Progress
+                      value={interviewProgress}
                       className="h-2 bg-muted/50"
                     />
                   </div>
@@ -441,7 +455,7 @@ export function InterviewSessionPanel({
                   className="answer-input-field min-h-[150px] resize-none bg-muted/20 border-border/50 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:bg-card"
                   disabled={isEvaluatingResponse || isRecording}
                 />
-                
+
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="audio-mode-toggle flex items-center gap-2">
                     <Switch

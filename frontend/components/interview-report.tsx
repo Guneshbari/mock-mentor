@@ -176,8 +176,8 @@ export function InterviewReportSummary({ evaluationResults, onRestartInterview, 
                     </span>
                     <span className="text-xs text-muted-foreground">/100</span>
                   </div>
-                  <Progress 
-                    value={category.score} 
+                  <Progress
+                    value={category.score}
                     className="h-1.5 bg-muted"
                   />
                 </div>
@@ -273,6 +273,68 @@ export function InterviewReportSummary({ evaluationResults, onRestartInterview, 
           </Card>
         </div>
 
+        {/* Question-by-Question Performance Breakdown */}
+        {evaluationResults.questionAnswerHistory && evaluationResults.questionAnswerHistory.length > 0 && (
+          <Card className="performance-breakdown-card shadow-md border-border/50 bg-card">
+            <CardHeader className="pb-3 pt-4">
+              <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-primary" />
+                Question-by-Question Performance
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                Review your performance on each question
+              </p>
+            </CardHeader>
+            <CardContent className="pb-4">
+              <div className="flex flex-col gap-3">
+                {evaluationResults.questionAnswerHistory.map((item: any, index: number) => (
+                  <div
+                    key={index}
+                    className="question-performance-item p-3 rounded-lg border border-border/50 bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground mb-1">
+                          Question {index + 1}
+                        </p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {item.question}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span className={`text-lg font-bold ${getScoreColorClass(item.score || 0)}`}>
+                          {item.score || 0}
+                        </span>
+                        <span className="text-xs text-muted-foreground">/100</span>
+                      </div>
+                    </div>
+                    {item.key_feedback && (
+                      <p className="text-xs text-muted-foreground italic mt-2 pl-2 border-l-2 border-primary/30">
+                        {item.key_feedback}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Score Calculation Transparency */}
+              {evaluationResults.scoreCalculation && (
+                <>
+                  <Separator className="my-4" />
+                  <div className="score-calculation-info p-3 rounded-lg bg-primary/5 border border-primary/20">
+                    <p className="text-xs font-medium text-primary mb-1 flex items-center gap-2">
+                      <Target className="h-3 w-3" />
+                      How Your Score Was Calculated
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {evaluationResults.scoreCalculation}
+                    </p>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Footer with Audio Summary and Restart Button */}
         <div className="report-footer-section pt-2 pb-8">
           <Separator className="mb-6" />
@@ -283,9 +345,8 @@ export function InterviewReportSummary({ evaluationResults, onRestartInterview, 
                 onClick={() => isSpeakingSummary ? stopSpeaking() : speakSummary()}
                 variant="outline"
                 size="lg"
-                className={`audio-summary-button font-medium border-border text-foreground hover:scale-[1.02] transition-all duration-200 bg-transparent ${
-                  isSpeakingSummary ? 'border-primary text-primary' : ''
-                }`}
+                className={`audio-summary-button font-medium border-border text-foreground hover:scale-[1.02] transition-all duration-200 bg-transparent ${isSpeakingSummary ? 'border-primary text-primary' : ''
+                  }`}
               >
                 {isSpeakingSummary ? (
                   <>
@@ -300,7 +361,7 @@ export function InterviewReportSummary({ evaluationResults, onRestartInterview, 
                 )}
               </Button>
             )}
-            
+
             <Button
               onClick={onRestartInterview}
               variant="outline"
