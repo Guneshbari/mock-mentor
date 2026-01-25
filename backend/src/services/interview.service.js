@@ -36,7 +36,7 @@ async function startInterview(interviewConfig) {
     history: [],
     currentStep: 1,
   };
-  
+
   // Determine dynamic total rounds based on role and skills
   const initialTotalRounds = aiService.determineTotalRounds(tempState);
 
@@ -89,10 +89,25 @@ async function processNextStep(sessionId, previousAnswerText) {
   // When we're on step N, we're answering the question that was generated when we moved to step N
   const currentQuestion = interviewState.lastQuestion || PLACEHOLDER_QUESTIONS[interviewState.currentStep - 1];
 
-  // Add answer to history
+  // Evaluate the answer (real-time evaluation)
+  let evaluation = null;
+  try {
+    evaluation = await aiService.evaluateAnswer(currentQuestion, previousAnswerText, interviewState);
+    console.log(`Evaluation for step ${interviewState.currentStep}:`, evaluation);
+  } catch (evalError) {
+    console.error('Error evaluating answer:', evalError);
+    // Provide fallback evaluation if AI evaluation fails
+    evaluation = {
+      score: 50,
+      feedback: 'Unable to evaluate response automatically.'
+    };
+  }
+
+  // Add answer with evaluation to history
   interviewState.history.push({
     question: currentQuestion,
     answer: previousAnswerText,
+    evaluation: evaluation, // Include evaluation in history
   });
 
   // Dynamically adjust total rounds based on answer quality (adaptive)
@@ -117,6 +132,7 @@ async function processNextStep(sessionId, previousAnswerText) {
       finalReport: interviewState.finalReport,
       currentStep: interviewState.currentStep,
       totalSteps: interviewState.totalSteps,
+      evaluation: evaluation, // Include evaluation for the last answer
     };
   }
 
@@ -135,6 +151,7 @@ async function processNextStep(sessionId, previousAnswerText) {
     finalReport: null,
     currentStep: interviewState.currentStep,
     totalSteps: interviewState.totalSteps,
+    evaluation: evaluation, // Return evaluation for the submitted answer
   };
 }
 

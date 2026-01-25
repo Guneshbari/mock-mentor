@@ -31,9 +31,9 @@ interface QuestionAudio {
 }
 
 interface InterviewSetupFormProps {
-  onStartInterview: (config: InterviewConfiguration & { 
-    sessionId: string; 
-    firstQuestion: string; 
+  onStartInterview: (config: InterviewConfiguration & {
+    sessionId: string;
+    firstQuestion: string;
     totalSteps: number;
     questionAudio?: QuestionAudio;
   }) => void;
@@ -64,6 +64,7 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
   const [resumeText, setResumeText] = useState("");
   const [experiencePreset, setExperiencePreset] = useState("");
   const [audioMode, setAudioMode] = useState(false);
+  const [formError, setFormError] = useState("");
   const [micPermissionStatus, setMicPermissionStatus] = useState<'unknown' | 'granted' | 'denied'>('unknown');
 
   // Check microphone permission when audio mode is enabled
@@ -99,23 +100,58 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
   };
 
   const handleStartInterview = async () => {
+    // Auto-commit any pending skill input
+    let finalSkills = [...skills];
+    if (skillInputValue.trim()) {
+      // Split by comma to handle multiple skills at once
+      const newSkills = skillInputValue.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      newSkills.forEach(s => {
+        if (!finalSkills.includes(s)) {
+          finalSkills.push(s);
+        }
+      });
+      // Update state to reflect changes in UI (optional but good for consistency)
+      setSkills(finalSkills);
+      setSkillInputValue("");
+    }
+
     const interviewConfig = {
       interviewType: selectedInterviewType,
       role,
-      skills,
+      skills: finalSkills, // Use the updated list
       resumeText,
+      experiencePreset,
       audioMode,
     };
-    
+
+    // Validate mandatory fields
+    if (!role.trim()) {
+      setFormError("Please enter a job role to continue.");
+      return;
+    }
+    if (finalSkills.length === 0) {
+      setFormError("Please add at least one skill to continue.");
+      return;
+    }
+    if (!resumeText.trim()) {
+      setFormError("Please provide your resume or background summary to continue.");
+      return;
+    }
+    if (!experiencePreset) {
+      setFormError("Please select an experience level preset to continue.");
+      return;
+    }
+    setFormError("");
+
     try {
       const response = await fetch('/api/interview/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ interviewConfig }),
       });
-      
+
       if (!response.ok) throw new Error('Failed to start interview');
-      
+
       const data = await response.json();
       onStartInterview({
         ...interviewConfig,
@@ -168,21 +204,21 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
               className="w-full"
             >
               <TabsList className="grid w-full grid-cols-3 bg-muted/50">
-                <TabsTrigger 
-                  value="hr" 
+                <TabsTrigger
+                  value="hr"
                   className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all duration-200"
                 >
                   <Users className="h-4 w-4 mr-1.5" />
                   HR
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="technical"
                   className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all duration-200"
                 >
                   <Code className="h-4 w-4 mr-1.5" />
                   Technical
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="behavioral"
                   className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all duration-200"
                 >
@@ -196,7 +232,7 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
           {/* Job Role Input */}
           <div className="job-role-input flex flex-col gap-2">
             <Label htmlFor="target-job-role" className="text-sm font-medium text-foreground">
-              Job Role
+              Job Role <span className="text-destructive">*</span>
             </Label>
             <Input
               id="target-job-role"
@@ -210,7 +246,7 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
           {/* Skills Input */}
           <div className="skills-input flex flex-col gap-2">
             <Label htmlFor="candidate-skills" className="text-sm font-medium text-foreground">
-              Skills
+              Skills <span className="text-destructive">*</span>
             </Label>
             <Input
               id="candidate-skills"
@@ -246,8 +282,7 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
           {/* Resume Input */}
           <div className="resume-input flex flex-col gap-2">
             <Label htmlFor="resume-content" className="text-sm font-medium text-foreground">
-              Resume / Background{" "}
-              <span className="text-muted-foreground font-normal">(Optional)</span>
+              Resume / Background <span className="text-destructive">*</span>
             </Label>
             <Textarea
               id="resume-content"
@@ -261,12 +296,11 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
           {/* Experience Preset */}
           <div className="experience-preset-selector flex flex-col gap-2">
             <Label htmlFor="experience-preset" className="text-sm font-medium text-foreground">
-              Preset{" "}
-              <span className="text-muted-foreground font-normal">(Optional)</span>
+              Experience Level <span className="text-destructive">*</span>
             </Label>
             <Select value={experiencePreset} onValueChange={setExperiencePreset}>
-              <SelectTrigger 
-                id="experience-preset" 
+              <SelectTrigger
+                id="experience-preset"
                 className="bg-secondary/30 border-border/50 transition-all duration-200 focus:ring-2 focus:ring-primary/50"
               >
                 <SelectValue placeholder="Select a preset" />
@@ -277,6 +311,9 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
                 <SelectItem value="fresh">Fresh Graduate</SelectItem>
               </SelectContent>
             </Select>
+            {formError && (
+              <p className="text-xs text-destructive mt-1">{formError}</p>
+            )}
           </div>
 
           {/* Audio Mode Toggle */}
@@ -299,7 +336,7 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              {audioMode 
+              {audioMode
                 ? "Questions will be spoken aloud. You can answer with voice or text."
                 : "Enable to hear questions and respond with voice."}
             </p>

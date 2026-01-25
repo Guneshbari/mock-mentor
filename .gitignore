@@ -1,5 +1,8 @@
 # Dependencies
 node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
 
 # Environment variables
 .env
@@ -9,6 +12,7 @@ node_modules/
 # Next.js
 .next/
 out/
+*.tsbuildinfo
 
 # Build outputs
 dist/
@@ -24,3 +28,19 @@ yarn-error.log*
 .DS_Store
 .vscode/
 .cursor/
+.idea/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+backend/test-*.js
+backend/test-*.ps1
+
+# Audio temp files (if any escape cleanup)
+backend/interview-audio-*.webm
+backend/interview-audio-*.wav
+backend/interview-audio-*.mp3
