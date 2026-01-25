@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.*
+*.env
+
+# Next.js
+.next/
+out/
+
+# Build outputs
+dist/
+build/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# OS / Editor
+.DS_Store
+.vscode/
+.cursor/
