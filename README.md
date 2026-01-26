@@ -6,7 +6,7 @@
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.1-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Gemini](https://img.shields.io/badge/Google%20Gemini-Flash%202.0-blue?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
+[![Groq](https://img.shields.io/badge/Groq-Llama%203-blue?style=for-the-badge&logo=ai&logoColor=white)](https://groq.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
@@ -18,28 +18,21 @@
 
 ## 🚀 Overview
 
-**Mock Mentor** is a cutting-edge AI interview platform designed to simulate real-world technical interviews with scary accuracy. Unlike generic chatbots, Mock Mentor uses a **structured, role-specific roadmap system** driven by Google's latest **Gemini 2.0 Flash** model to ensure every question is relevant, challenging, and logically progressive.
-
-Whether you are a **Fresh Graduate** looking for your first job or a **Senior Architect** validated your system design skills, Mock Mentor adapts the difficulty and topic depth automatically.
+**Mock Mentor** is a cutting-edge AI interview platform designed to simulate real-world technical interviews. It uses the ultra-fast **Groq LPU™ Inference Engine** running **Meta's Llama 3** to provide sub-second responses and human-like reasoning.
 
 ---
 
 ## ✨ Features
 
 ### 🧠 Intelligent Roadmap Engine
-The core of Mock Mentor is its deterministic yet adaptive roadmap engine. It ensures no two interviews are the same, while strict adherence to professional standards is maintained.
+- **5-Step Strict Progression**: Organized interview flow.
+- **Roles & Levels**: Customized for Freshers, Mid-level, and Seniors.
+- **Adaptive**: Adjusts difficulty based on your answers.
 
-- **5-Step Strict Progression**: Every interview follows a curated 5-stage journey specific to the role.
-- **Experience Tiers**:
-  - 🌱 **Fresh/Entry**: Focus on fundamentals, syntax, and basic problem solving.
-  - 🚀 **Mid-Level**: Focus on implementation, best practices, and edge cases.
-  - 💎 **Senior**: Focus on system design, scalability, trade-offs, and leadership.
-- **Multi-Mode**: Specialized tracks for **Technical**, **HR**, and **Behavioral** interviews.
-
-### ⚡ Powered by Google Gemini
-- **Gemini 2.0 Flash**: Delivers question generation in <1 second.
-- **Gemini 1.5 Pro**: Powers the "Evaluation Block" for deep, nuanced scoring and feedback.
-- **Context Awareness**: The AI remembers your previous answers to ask relevant follow-up questions (e.g., *"You mentioned using Redis earlier; how did you handle cache invalidation?"*).
+### ⚡ Powered by Groq AI
+- **Speed**: <500ms latency for questions using Llama 3 70B.
+- **Depth**: Detailed evaluation using heavy reasoning models.
+- **Audio**: Whisper Large V3 for accurate speech-to-text.
 
 ### 📊 Comprehensive Analytics
 - **Real-time Feedback**: Instant scoring after every answer.
@@ -67,17 +60,17 @@ graph TD
     C -->|Generate| D["Question Block"]
     C -->|Score| E["Evaluation Block"]
     C -->|Report| F["Feedback Block"]
-    D -->|"Gemini 2.0"| G["Google AI"]
-    E -->|"Gemini 1.5"| G
+    D -->|"Llama 3 70B"| G["Groq AI"]
+    E -->|"Llama 3 70B"| G
 ```
 
 ### Key Services
 | Service | Responsibility | Model Used |
 |---------|----------------|------------|
 | **RoleBlock** | Define specific focus areas per job role | N/A (Static Config) |
-| **QuestionGenerator** | Create adaptive, unique questions | `gemini-2.0-flash-exp` |
-| **EvaluationBlock** | Score answers against rubrics | `gemini-1.5-pro` |
-| **FeedbackBlock** | Compile final detailed report | `gemini-1.5-pro` |
+| **QuestionGenerator** | Create adaptive, unique questions | `llama3-70b-8192` |
+| **EvaluationBlock** | Score answers against rubrics | `llama3-70b-8192` |
+| **FeedbackBlock** | Compile final detailed report | `llama3-70b-8192` |
 
 ---
 

@@ -1,25 +1,26 @@
-const GeminiService = require('./GeminiService');
+const GroqService = require('./GroqService');
 const RoleBlock = require('./blocks/RoleBlock');
 const QuestionGeneratorBlock = require('./blocks/QuestionGeneratorBlock');
 const EvaluationBlock = require('./blocks/EvaluationBlock');
 const FeedbackBlock = require('./blocks/FeedbackBlock');
 const QuestionElaborationBlock = require('./blocks/QuestionElaborationBlock');
 
-// Initialize Gemini AI Service
-const gemini = process.env.GEMINI_API_KEY
-  ? new GeminiService(process.env.GEMINI_API_KEY)
+// Initialize Groq AI Service
+const aiService = process.env.GROQ_API_KEY
+  ? new GroqService(process.env.GROQ_API_KEY)
   : null;
 
-if (!gemini) {
-  console.warn('[AI Service] No Gemini API key found. AI features will be disabled.');
+if (!aiService) {
+  console.warn('[AI Service] No GROQ_API_KEY found. AI features will be disabled.');
 }
 
-// Initialize Blocks with Gemini
+// Initialize Blocks with AI Service (Adapter)
+// Blocks internally refer to it as 'gemini' but the interface matches
 const roleBlock = new RoleBlock();
-const questionBlock = new QuestionGeneratorBlock(gemini);
-const evaluationBlock = new EvaluationBlock(gemini);
-const feedbackBlock = new FeedbackBlock(gemini);
-const elaborationBlock = new QuestionElaborationBlock(gemini);
+const questionBlock = new QuestionGeneratorBlock(aiService);
+const evaluationBlock = new EvaluationBlock(aiService);
+const feedbackBlock = new FeedbackBlock(aiService);
+const elaborationBlock = new QuestionElaborationBlock(aiService);
 
 // --- Public API (Facade) ---
 
@@ -87,7 +88,7 @@ function fallbackQuestion(currentStep) {
  * @returns {Promise<{success: boolean, transcribedText?: string, error?: string, needsRetry?: boolean}>}
  */
 async function processAudioAnswer(audioBase64, mimeType = 'audio/webm') {
-  if (!groq) {
+  if (!aiService) {
     return {
       success: false,
       error: 'Audio transcription not available (missing API key)',
@@ -126,17 +127,9 @@ async function processAudioAnswer(audioBase64, mimeType = 'audio/webm') {
     fs.writeFileSync(tempPath, audioBuffer);
     console.log(`[Audio] Saved to temp file: ${tempPath}`);
 
-    // Use Groq's Whisper API for transcription with enhanced settings
-    console.log('[Audio] Calling Groq Whisper API with noise filtering...');
-    const transcription = await groq.audio.transcriptions.create({
-      file: fs.createReadStream(tempPath),
-      model: 'whisper-large-v3-turbo', // Faster than whisper-large-v3
-      response_format: 'text',
-      language: 'en',
-      temperature: 0.0, // Lower temperature for more accurate transcription
-      // Prompt to guide the model to focus on interview responses and ignore background noise
-      prompt: 'This is a professional interview response. Transcribe only clear human speech, ignoring background noise, music, or ambient sounds.'
-    });
+    // Use Groq's Whisper API via Service
+    console.log('[Audio] Calling Groq Whisper API...');
+    const transcription = await aiService.transcribeAudio(fs.createReadStream(tempPath));
 
     console.log('[Audio] Transcription received');
 

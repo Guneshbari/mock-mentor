@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: mock-mentor-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GROQ_API_KEY
+        sync: false # User must provide this
