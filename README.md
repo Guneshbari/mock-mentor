@@ -62,13 +62,13 @@ Mock Mentor uses a **Composable Block Architecture** in the backend to separate 
 
 ```mermaid
 graph TD
-    A[Client (Next.js)] -->|POST /next| B(Express Server)
-    B --> C{Interview Orchestrator}
-    C -->|Generate| D[Question Block]
-    C -->|Score| E[Evaluation Block]
-    C -->|Report| F[Feedback Block]
-    D -->|Gemini 2.0| G[Google AI]
-    E -->|Gemini 1.5| G
+    A["Client (Next.js)"] -->|"POST /next"| B["Express Server"]
+    B --> C{"Interview Orchestrator"}
+    C -->|Generate| D["Question Block"]
+    C -->|Score| E["Evaluation Block"]
+    C -->|Report| F["Feedback Block"]
+    D -->|"Gemini 2.0"| G["Google AI"]
+    E -->|"Gemini 1.5"| G
 ```
 
 ### Key Services
