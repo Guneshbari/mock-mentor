@@ -2,7 +2,7 @@
  * EvaluationBlock - Gemini Version
  * Score candidate answers with detailed performance metrics
  */
-const { ROLE_ROADMAPS, BEHAVIORAL_ROADMAPS, HR_ROADMAPS } = require('./RoleStrategies');
+const { MASTER_ROADMAPS } = require('./RoleStrategies');
 
 class EvaluationBlock {
     constructor(geminiClient) {
@@ -20,17 +20,16 @@ class EvaluationBlock {
 
         // Resolve Expected Topic from Roadmap
         const level = this._resolveExperienceLevel(experiencePreset);
-        let roadmap;
-
         const typeLower = (interviewType || 'technical').toLowerCase();
-        if (typeLower === 'behavioral') {
-            roadmap = BEHAVIORAL_ROADMAPS[level] || BEHAVIORAL_ROADMAPS['mid'];
-        } else if (typeLower === 'hr') {
-            roadmap = HR_ROADMAPS[level] || HR_ROADMAPS['mid'];
-        } else {
-            const roleData = ROLE_ROADMAPS[role] || ROLE_ROADMAPS["Full Stack Developer"];
-            roadmap = roleData[level] || roleData["mid"];
-        }
+
+        // 1. Get Role Data (e.g. MasterRoadmaps["Frontend Developer"])
+        const roleData = MASTER_ROADMAPS[role] || MASTER_ROADMAPS["Frontend Developer"];
+
+        // 2. Get Level Data
+        const levelData = roleData[level] || roleData['mid'];
+
+        // 3. Get Type Data (e.g. levelData["hr"])
+        const roadmap = levelData[typeLower] || levelData['technical'];
 
         const expectedTopic = roadmap[questionIndex] || "General Concepts";
 

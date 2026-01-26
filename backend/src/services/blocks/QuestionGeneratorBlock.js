@@ -1,14 +1,14 @@
 /**
- * QuestionGeneratorBlock - Gemini Version
+ * QuestionGeneratorBlock - Groq/Gemini Version
  * STRICT non-repetition with topic/intent tracking and dimension-shifting follow-ups
- * NOW ENFORCING: 5-Step Logic Roadmaps per Role AND Experience Level AND Interview Type
+ * NOW ENFORCING: 5-Step Logic Roadmaps per Role AND Experience Level AND Interview Type (45 Questions/Role)
  */
 const AnswerAnalyzer = require('./AnswerAnalyzer');
-const { ROLE_ROADMAPS, BEHAVIORAL_ROADMAPS, HR_ROADMAPS, INTERVIEW_TYPE_STRATEGIES } = require('./RoleStrategies');
+const { MASTER_ROADMAPS, INTERVIEW_TYPE_STRATEGIES } = require('./RoleStrategies');
 
 class QuestionGeneratorBlock {
-    constructor(geminiClient) {
-        this.gemini = geminiClient;
+    constructor(aiClient) {
+        this.gemini = aiClient; // Keeping internal name as 'gemini' for now to avoid refactoring everything
     }
 
     async execute(roleContextPrompt, history, interviewConfig) {
@@ -54,6 +54,7 @@ Return JSON with this exact format:
             return result.question || `Can you explain your experience with ${targetTopic}?`;
         } catch (error) {
             console.error('[QuestionGenerator] Error:', error);
+            // Fallback if AI fails
             return `Can you explain your experience with ${targetTopic}?`;
         }
     }
@@ -95,15 +96,20 @@ ${previousQuestions}
 ${connectionHints ? `POSSIBLE CONNECTION: ${connectionHints} (Try to bridge to the new topic if natural)` : ''}
 
 === YOUR MISSION ===
-Generate a follow-up question that:
-1. STRICTLY covers the Mandatory Topic: "${targetTopic}"
-2. Tries to transition smoothly from the previous answer IF POSSIBLE (but Topic Priority > Transition)
-3. Aligns with ${interviewConfig.role} role at ${level.toUpperCase()} level
-4. Follows ${interviewConfig.interviewType} style
+Generate a bridged follow-up question that connects their previous answer to the new topic:
+
+MANDATORY RULES:
+1. START by acknowledging or referencing a specific detail from their previous answer (e.g., "You mentioned X...").
+2. BRIDGE that detail to the new Mandatory Topic: "${targetTopic}".
+   - Pattern: "Given your experience with [Thing they said], how do you handle [New Topic]?"
+   - Pattern: "You mentioned [Thing they said]. How does that relate to [New Topic]?"
+3. The CORE question must be about "${targetTopic}".
+4. Aligns with ${interviewConfig.role} role at ${level.toUpperCase()} level.
+5. Follows ${interviewConfig.interviewType} style.
 
 Return JSON:
 {
-  "question": "your question here",
+  "question": "your bridged follow-up question here",
   "topic": "${targetTopic}",
   "intent": "roadmap_progression"
 }`;
@@ -127,17 +133,19 @@ Return JSON:
 
     _resolveRoadmap(interviewConfig, level) {
         const type = (interviewConfig.interviewType || 'technical').toLowerCase();
+        const role = interviewConfig.role; // e.g. "Frontend Developer"
 
-        if (type === 'behavioral') {
-            return BEHAVIORAL_ROADMAPS[level] || BEHAVIORAL_ROADMAPS['mid'];
-        }
-        if (type === 'hr') {
-            return HR_ROADMAPS[level] || HR_ROADMAPS['mid'];
-        }
+        // 1. Get Role Data (e.g. MasterRoadmaps["Frontend Developer"])
+        // Fallback to "Frontend Developer" if role not found to avoid crash
+        const roleData = MASTER_ROADMAPS[role] || MASTER_ROADMAPS["Frontend Developer"];
 
-        // Technical (Role Based)
-        const roleData = ROLE_ROADMAPS[interviewConfig.role] || ROLE_ROADMAPS["Full Stack Developer"];
-        return roleData[level] || roleData['mid'];
+        // 2. Get Level Data (e.g. roleData["fresh"])
+        // Note: MASTER_ROADMAPS has keys: fresh, mid, senior
+        const levelData = roleData[level] || roleData['mid'];
+
+        // 3. Get Type Data (e.g. levelData["hr"])
+        // Note: levelData has keys: technical, hr, behavioral
+        return levelData[type] || levelData['technical'];
     }
 
     _getFallbackFollowUp(index) {
