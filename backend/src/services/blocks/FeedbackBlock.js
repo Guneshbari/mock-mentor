@@ -4,18 +4,39 @@
  * Calculates overall score from individual answer evaluations.
  */
 class FeedbackBlock {
-    constructor(groqClient) {
-        this.groq = groqClient;
-        this.model = process.env.GROQ_MODEL || "llama3-8b-8192";
+    constructor(geminiClient) {
+        this.gemini = geminiClient;
     }
 
-    async execute(history) {
-        if (!this.groq) return {
+    async execute(history, interviewConfig) {
+        if (!this.gemini) return {
             overallScore: 0,
             feedback: "No AI provider",
             calculatedScore: 0,
             individualScores: []
         };
+
+        // CRITICAL: Evaluate all answers NOW if they don't have evaluations
+        // This happens because we removed real-time evaluation during interview
+        console.log('[FeedbackBlock] Evaluating all answers for final report...');
+
+        const evaluationBlock = require('./EvaluationBlock');
+        const evalBlock = new evaluationBlock(this.gemini);
+
+        // Evaluate each answer that doesn't have an evaluation
+        for (let i = 0; i < history.length; i++) {
+            if (!history[i].evaluation) {
+                console.log(`[FeedbackBlock] Evaluating Q${i + 1}...`);
+                const evaluation = await evalBlock.execute(
+                    history[i].question,
+                    history[i].answer,
+                    interviewConfig,
+                    i // Pass index for Roadmap Topic awareness
+                );
+                history[i].evaluation = evaluation;
+                console.log(`[FeedbackBlock] Q${i + 1} Score: ${evaluation.score}`);
+            }
+        }
 
         // Calculate overall score from individual evaluations
         const scoreData = this._calculateOverallScore(history);
@@ -66,17 +87,8 @@ IMPORTANT:
         }).join('\n\n');
 
         try {
-            const completion = await this.groq.chat.completions.create({
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: `Analyze this interview and generate a comprehensive report:\n\n${conversationParts}` }
-                ],
-                model: this.model,
-                temperature: 0.3,
-                response_format: { type: "json_object" }
-            });
-
-            const report = JSON.parse(completion.choices[0]?.message?.content || "{}");
+            const userPrompt = `Analyze this interview and generate a comprehensive report:\n\n${conversationParts}`;
+            const report = await this.gemini.generateReport(systemPrompt, userPrompt);
 
             // Add the calculated overall score
             report.overallScore = scoreData.overallScore;
@@ -235,4 +247,3 @@ IMPORTANT:
 }
 
 module.exports = FeedbackBlock;
-

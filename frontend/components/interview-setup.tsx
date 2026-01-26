@@ -41,6 +41,8 @@ interface InterviewSetupFormProps {
 
 export interface InterviewConfiguration {
   interviewType: "hr" | "technical" | "behavioral";
+  candidateName: string;
+  candidateGender: "male" | "female" | "other" | "prefer-not-to-say";
   role: string;
   skills: string[];
   resumeText: string;
@@ -58,6 +60,8 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
   const [selectedInterviewType, setSelectedInterviewType] = useState<
     "hr" | "technical" | "behavioral"
   >("hr");
+  const [candidateName, setCandidateName] = useState("");
+  const [candidateGender, setCandidateGender] = useState<"male" | "female" | "other" | "prefer-not-to-say">("prefer-not-to-say");
   const [role, setRole] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInputValue, setSkillInputValue] = useState("");
@@ -117,6 +121,8 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
 
     const interviewConfig = {
       interviewType: selectedInterviewType,
+      candidateName,
+      candidateGender,
       role,
       skills: finalSkills, // Use the updated list
       resumeText,
@@ -125,6 +131,10 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
     };
 
     // Validate mandatory fields
+    if (!candidateName.trim()) {
+      setFormError("Please enter your name to continue.");
+      return;
+    }
     if (!role.trim()) {
       setFormError("Please enter a job role to continue.");
       return;
@@ -191,6 +201,41 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
           </p>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
+          {/* Candidate Name */}
+          <div className="candidate-name-input flex flex-col gap-2">
+            <Label htmlFor="candidate-name" className="text-sm font-medium text-foreground">
+              Your Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="candidate-name"
+              placeholder="e.g. John Doe"
+              value={candidateName}
+              onChange={(e) => setCandidateName(e.target.value)}
+              className="bg-secondary/30 border-border/50 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:bg-card"
+            />
+          </div>
+
+          {/* Candidate Gender */}
+          <div className="candidate-gender-selector flex flex-col gap-2">
+            <Label htmlFor="candidate-gender" className="text-sm font-medium text-foreground">
+              Gender
+            </Label>
+            <Select value={candidateGender} onValueChange={(value: any) => setCandidateGender(value)}>
+              <SelectTrigger
+                id="candidate-gender"
+                className="bg-secondary/30 border-border/50 transition-all duration-200 focus:ring-2 focus:ring-primary/50"
+              >
+                <SelectValue placeholder="Select gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="male">Male</SelectItem>
+                <SelectItem value="female">Female</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Interview Type Selection */}
           <div className="interview-type-selector flex flex-col gap-2">
             <Label className="text-sm font-medium text-foreground">
@@ -234,13 +279,30 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
             <Label htmlFor="target-job-role" className="text-sm font-medium text-foreground">
               Job Role <span className="text-destructive">*</span>
             </Label>
-            <Input
-              id="target-job-role"
-              placeholder="e.g. Frontend Developer"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="bg-secondary/30 border-border/50 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:bg-card"
-            />
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger
+                id="target-job-role"
+                className="bg-secondary/30 border-border/50 transition-all duration-200 focus:ring-2 focus:ring-primary/50"
+              >
+                <SelectValue placeholder="Select a job role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Frontend Developer">Frontend Developer</SelectItem>
+                <SelectItem value="Backend Developer">Backend Developer</SelectItem>
+                <SelectItem value="Full Stack Developer">Full Stack Developer</SelectItem>
+                <SelectItem value="DevOps Engineer">DevOps Engineer</SelectItem>
+                <SelectItem value="Data Scientist">Data Scientist</SelectItem>
+                <SelectItem value="Machine Learning Engineer">Machine Learning Engineer</SelectItem>
+                <SelectItem value="Mobile Developer">Mobile Developer</SelectItem>
+                <SelectItem value="QA Engineer">QA Engineer</SelectItem>
+                <SelectItem value="Product Manager">Product Manager</SelectItem>
+                <SelectItem value="UI/UX Designer">UI/UX Designer</SelectItem>
+                <SelectItem value="Software Architect">Software Architect</SelectItem>
+                <SelectItem value="Cloud Engineer">Cloud Engineer</SelectItem>
+                <SelectItem value="Security Engineer">Security Engineer</SelectItem>
+                <SelectItem value="Database Administrator">Database Administrator</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Skills Input */}

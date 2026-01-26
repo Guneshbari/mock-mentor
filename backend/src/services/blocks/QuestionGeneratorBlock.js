@@ -1,124 +1,159 @@
 /**
- * QuestionGeneratorBlock
- * Responsibility: Generate the next interview question based on context and history.
+ * QuestionGeneratorBlock - Gemini Version
+ * STRICT non-repetition with topic/intent tracking and dimension-shifting follow-ups
+ * NOW ENFORCING: 5-Step Logic Roadmaps per Role AND Experience Level AND Interview Type
  */
+const AnswerAnalyzer = require('./AnswerAnalyzer');
+const { ROLE_ROADMAPS, BEHAVIORAL_ROADMAPS, HR_ROADMAPS, INTERVIEW_TYPE_STRATEGIES } = require('./RoleStrategies');
+
 class QuestionGeneratorBlock {
-    constructor(groqClient) {
-        this.groq = groqClient;
-        this.model = process.env.GROQ_MODEL || "llama3-8b-8192";
+    constructor(geminiClient) {
+        this.gemini = geminiClient;
     }
 
     async execute(roleContextPrompt, history, interviewConfig) {
-        if (!this.groq) throw new Error("Groq client not initialized");
-
-        const messages = [
-            { role: "system", content: roleContextPrompt }
-        ];
-
-        // Add conversation history for context
-        if (history && history.length > 0) {
-            // Add all previous Q&A to maintain full context
-            history.forEach(h => {
-                messages.push({ role: "assistant", content: h.question });
-                messages.push({ role: "user", content: h.answer });
-            });
-        }
-
-        // Add adaptive instruction for the next turn
         if (!history || history.length === 0) {
-            // First question - role-specific opening
-            const openingStrategy = this._getOpeningStrategy(interviewConfig.role, interviewConfig.experiencePreset);
-            messages.push({
-                role: "system",
-                content: `Generate the FIRST opening question for this ${interviewConfig.interviewType} interview.
-
-CRITICAL REQUIREMENTS:
-1. Make it SPECIFIC to the role: "${interviewConfig.role}"
-2. Focus on their skills: ${interviewConfig.skills?.join(', ') || 'general competencies'}
-3. Match their experience level: ${interviewConfig.experiencePreset || 'junior'}
-4. Start with something engaging and role-relevant
-5. DO NOT ask generic "tell me about yourself" questions
-6. Ask about a SPECIFIC scenario or skill from their role
-
-Context: ${openingStrategy}
-
-Return ONLY the question text, no preamble.`
-            });
-        } else {
-            // Subsequent questions - HIGHLY ADAPTIVE based on previous answer
-            const lastExchange = history[history.length - 1];
-            const previousAnswer = lastExchange.answer;
-            const previousQuestion = lastExchange.question;
-
-            // Extract key concepts from previous answer for next question
-            const adaptiveInstruction = `
-CRITICAL: Generate the NEXT interview question with MAXIMUM ADAPTIVITY.
-
-ANALYZE THE PREVIOUS EXCHANGE:
-Previous Question: "${previousQuestion}"
-Candidate's Answer: "${previousAnswer}"
-
-YOUR ADAPTIVE STRATEGY (MANDATORY):
-1. **Deep Dive**: If the answer mentioned a specific technology, project, or concept, ask a FOLLOW-UP question that digs deeper into that exact topic
-2. **Related Exploration**: If they showed strength in an area, explore a related but different aspect of that skill
-3. **Gap Probing**: If the answer was shallow or vague, ask a "why" or "how" question to uncover depth
-4. **Skill Pivoting**: Move to a different required skill from [${interviewConfig.skills?.join(', ')}] while still connecting to their previous answer
-5. **Role-Specific**: ALWAYS frame questions in the context of "${interviewConfig.role}" responsibilities
-
-VARIATION REQUIREMENTS:
-- DO NOT repeat or rephrase previous questions
-- DO NOT ask about the same exact topic twice
-- VARY question structure (scenario-based, problem-solving, explanation, comparison, etc.)
-- Make each question progressively more specific based on accumulated context
-
-DIFFICULTY ADJUSTMENT:
-- If they're doing well (detailed, accurate answers): INCREASE difficulty with trade-offs, edge cases, or architectural questions
-- If they're struggling: Ask foundational questions or provide scenario hints
-- Experience level: ${interviewConfig.experiencePreset}
-
-MANDATORY: The question MUST reference or build upon something from their previous answer.
-
-Return ONLY the question text.`;
-
-            messages.push({
-                role: "system",
-                content: adaptiveInstruction
-            });
+            return await this._generateFirstQuestion(roleContextPrompt, interviewConfig);
         }
 
-        const completion = await this.groq.chat.completions.create({
-            messages,
-            model: this.model,
-            temperature: 0.7,  // Increased from 0.3 for more variation
-            max_tokens: 1024,
-            top_p: 0.95  // Add top_p for more diverse outputs
-        });
-
-        return this._cleanQuestion(completion.choices[0]?.message?.content || "");
+        return await this._generateStrictlyUniqueFollowUp(roleContextPrompt, history, interviewConfig);
     }
 
-    _formatHistory(history) {
-        return (history || []).map(h => ([
-            { role: "assistant", content: h.question },
-            { role: "user", content: h.answer }
-        ])).flat();
+    async _generateFirstQuestion(roleContextPrompt, interviewConfig) {
+        // Resolve Experience Level & Type to Roadmap
+        const level = this._resolveExperienceLevel(interviewConfig.experiencePreset);
+        const roadmap = this._resolveRoadmap(interviewConfig, level);
+
+        const targetTopic = roadmap[0] || "Core Fundamentals";
+        const strategy = INTERVIEW_TYPE_STRATEGIES[interviewConfig.interviewType.toLowerCase()] || INTERVIEW_TYPE_STRATEGIES["technical"];
+
+        const systemPrompt = `${roleContextPrompt}
+
+TASK: Generate the FIRST interview question for ${interviewConfig.role} (${level.toUpperCase()} Level).
+
+STRICT REQUIREMENT: You MUST ask a question about "${targetTopic}".
+This is Step 1 of 5 in the ${interviewConfig.interviewType} roadmap.
+
+FORBIDDEN GENERIC QUESTIONS:
+❌ "Tell me about yourself"
+❌ "Tell me about a challenging project" (unless topic requires it)
+❌ "What are your strengths"
+
+INTERVIEW TYPE: ${interviewConfig.interviewType}
+Strategy: ${strategy.focus.join(', ')}
+
+Return JSON with this exact format:
+{
+  "question": "your specific question about ${targetTopic}",
+  "topic": "${targetTopic}",
+  "intent": "conceptual_understanding"
+}`;
+
+        try {
+            const result = await this.gemini.generateQuestion(systemPrompt, "Generate the first question as JSON.");
+            return result.question || `Can you explain your experience with ${targetTopic}?`;
+        } catch (error) {
+            console.error('[QuestionGenerator] Error:', error);
+            return `Can you explain your experience with ${targetTopic}?`;
+        }
     }
 
-    _getOpeningStrategy(role, experiencePreset) {
-        if (!role) return "Ask a specific technical question about their experience.";
+    async _generateStrictlyUniqueFollowUp(roleContextPrompt, history, interviewConfig) {
+        const lastExchange = history[history.length - 1];
+        const previousAnswer = lastExchange.answer;
+        const previousQuestion = lastExchange.question;
 
-        const level = experiencePreset || 'junior';
-        const strategies = {
-            'fresh': `Ask about a recent academic project or learning experience related to ${role}`,
-            'junior': `Ask about a specific feature or component they've built as a ${role}`,
-            'senior': `Ask about a complex architectural decision or system design challenge they've faced as a ${role}`
-        };
+        // Resolve Experience Level & Type to Roadmap
+        const level = this._resolveExperienceLevel(interviewConfig.experiencePreset);
+        const roadmap = this._resolveRoadmap(interviewConfig, level);
 
-        return strategies[level] || strategies['junior'];
+        const currentStepIndex = history.length; // 1 means we need Q2 (index 1)
+        const targetTopic = roadmap[currentStepIndex] || "Advanced/Scenario Challenge";
+
+        console.log(`[QuestionGenerator] Step ${currentStepIndex + 1}/5. Level: ${level}. Type: ${interviewConfig.interviewType}. Enforcing Topic: "${targetTopic}"`);
+
+        // Analyze answer depth and extract concepts
+        const mentionedConcepts = AnswerAnalyzer.extractMentionedConcepts(previousAnswer);
+        const connectionHints = this._findConnectionHints(previousAnswer, mentionedConcepts);
+
+        const previousQuestions = history.map((h, i) => `Q${i + 1}: ${h.question}`).join('\n');
+
+        const strictPrompt = `${roleContextPrompt}
+
+LAST QUESTION & ANSWER:
+Q: "${previousQuestion}"
+A: "${previousAnswer}"
+
+=== INTERVIEW ROADMAP ENFORCEMENT ===
+Current Stage: ${currentStepIndex + 1} of 5
+Topic Level: ${level.toUpperCase()}
+MANDATORY TOPIC: "${targetTopic}"
+
+PREVIOUS QUESTIONS:
+${previousQuestions}
+
+${connectionHints ? `POSSIBLE CONNECTION: ${connectionHints} (Try to bridge to the new topic if natural)` : ''}
+
+=== YOUR MISSION ===
+Generate a follow-up question that:
+1. STRICTLY covers the Mandatory Topic: "${targetTopic}"
+2. Tries to transition smoothly from the previous answer IF POSSIBLE (but Topic Priority > Transition)
+3. Aligns with ${interviewConfig.role} role at ${level.toUpperCase()} level
+4. Follows ${interviewConfig.interviewType} style
+
+Return JSON:
+{
+  "question": "your question here",
+  "topic": "${targetTopic}",
+  "intent": "roadmap_progression"
+}`;
+
+        try {
+            const result = await this.gemini.generateQuestion(strictPrompt, `Generate Q${currentStepIndex + 1} about "${targetTopic}" as JSON.`);
+            return result.question || this._getFallbackFollowUp(history.length);
+        } catch (error) {
+            console.error('[QuestionGenerator] Error:', error);
+            return this._getFallbackFollowUp(history.length);
+        }
     }
 
-    _cleanQuestion(text) {
-        return text.replace(/^["']|["']$/g, '').replace(/^Question:\s*/i, '').trim();
+    _resolveExperienceLevel(preset) {
+        if (!preset) return 'mid';
+        const p = preset.toLowerCase();
+        if (p.includes('fresh') || p.includes('entry') || p.includes('intern')) return 'fresh';
+        if (p.includes('senior') || p.includes('lead') || p.includes('principal')) return 'senior';
+        return 'mid';
+    }
+
+    _resolveRoadmap(interviewConfig, level) {
+        const type = (interviewConfig.interviewType || 'technical').toLowerCase();
+
+        if (type === 'behavioral') {
+            return BEHAVIORAL_ROADMAPS[level] || BEHAVIORAL_ROADMAPS['mid'];
+        }
+        if (type === 'hr') {
+            return HR_ROADMAPS[level] || HR_ROADMAPS['mid'];
+        }
+
+        // Technical (Role Based)
+        const roleData = ROLE_ROADMAPS[interviewConfig.role] || ROLE_ROADMAPS["Full Stack Developer"];
+        return roleData[level] || roleData['mid'];
+    }
+
+    _getFallbackFollowUp(index) {
+        const fallbacks = [
+            "Can you elaborate on the technical trade-offs you considered?",
+            "What were the biggest challenges you faced in that situation?",
+            "How did you measure the success or impact of that?",
+            "If you could do it again, what would you change?",
+            "How does this relate to other parts of the system?"
+        ];
+        return fallbacks[index % fallbacks.length];
+    }
+
+    _findConnectionHints(previousAnswer, mentionedConcepts) {
+        if (mentionedConcepts.length > 0) return `Candidate mentioned: ${mentionedConcepts.slice(0, 3).join(', ')}`;
+        return null;
     }
 }
 

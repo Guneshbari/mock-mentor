@@ -74,7 +74,7 @@ async function processNextStep(req, res) {
         console.log('Audio transcribed successfully:', answerText.substring(0, 100));
       } else if (audioResult.needsRetry) {
         // Return error asking user to retry or type
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: audioResult.error,
           needsRetry: true,
           transcriptionFailed: true
@@ -93,10 +93,16 @@ async function processNextStep(req, res) {
       answerText
     );
 
-    // If audio mode is enabled and there's a next question, include speech params
+    // If audio mode is enabled and there's a next question (or elaborated question), include speech params
     if (audioMode && result.nextQuestion) {
       const audioParams = await aiService.generateQuestionAudioParams(result.nextQuestion);
       result.questionAudio = audioParams;
+    }
+
+    // Check for elaborated question (gibberish detected)
+    if (result.isElaborated) {
+      console.log('Sending elaborated question response');
+      // Ensure currentStep matches what the frontend expects for refinement
     }
 
     // Include transcribed text in response for audio mode
@@ -107,7 +113,7 @@ async function processNextStep(req, res) {
     res.json(result);
   } catch (error) {
     console.error('Error in processNextStep:', error);
-    
+
     if (error.message === 'Invalid sessionId') {
       return res.status(400).json({ error: error.message });
     }
@@ -145,7 +151,7 @@ async function getFinalReport(req, res) {
     res.json(result);
   } catch (error) {
     console.error('Error in getFinalReport:', error);
-    
+
     if (error.message === 'Invalid sessionId' || error.message === 'Interview not completed yet') {
       return res.status(400).json({ error: error.message });
     }

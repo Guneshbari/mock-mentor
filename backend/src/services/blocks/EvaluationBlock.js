@@ -1,39 +1,63 @@
 /**
- * EvaluationBlock
- * Responsibility: Score candidate answers and provide immediate feedback with detailed performance metrics.
+ * EvaluationBlock - Gemini Version
+ * Score candidate answers with detailed performance metrics
  */
+const { ROLE_ROADMAPS, BEHAVIORAL_ROADMAPS, HR_ROADMAPS } = require('./RoleStrategies');
+
 class EvaluationBlock {
-    constructor(groqClient) {
-        this.groq = groqClient;
-        this.model = process.env.GROQ_MODEL || "llama3-8b-8192";
+    constructor(geminiClient) {
+        this.gemini = geminiClient;
     }
 
-    async execute(question, answer, interviewConfig) {
-        if (!this.groq) return {
+    async execute(question, answer, interviewConfig, questionIndex = 0) {
+        if (!this.gemini) return {
             score: 0,
             feedback: "No AI provider",
             breakdown: { completeness: 0, technicalAccuracy: 0, depth: 0, clarity: 0 }
         };
 
-        const { role, experiencePreset, skills, interviewType } = interviewConfig;
+        const { role, experiencePreset, interviewType } = interviewConfig;
+
+        // Resolve Expected Topic from Roadmap
+        const level = this._resolveExperienceLevel(experiencePreset);
+        let roadmap;
+
+        const typeLower = (interviewType || 'technical').toLowerCase();
+        if (typeLower === 'behavioral') {
+            roadmap = BEHAVIORAL_ROADMAPS[level] || BEHAVIORAL_ROADMAPS['mid'];
+        } else if (typeLower === 'hr') {
+            roadmap = HR_ROADMAPS[level] || HR_ROADMAPS['mid'];
+        } else {
+            const roleData = ROLE_ROADMAPS[role] || ROLE_ROADMAPS["Full Stack Developer"];
+            roadmap = roleData[level] || roleData["mid"];
+        }
+
+        const expectedTopic = roadmap[questionIndex] || "General Concepts";
+
         const rubric = this._getRubric(experiencePreset, interviewType);
 
-        const systemMessage = `You are an expert technical interviewer conducting a ${interviewType || 'technical'} interview for a ${role} position (${experiencePreset || 'mid'} level).
+        const systemMessage = `You are an expert technical interviewer conducting a ${interviewType || 'technical'} interview for a ${role} position (${level.toUpperCase()} level).
+
+CURRENT QUESTION CONTEXT:
+- Question Number: ${questionIndex + 1} of 5
+- REQUIRED TOPIC: "${expectedTopic}"
+
+YOUR TASK: Evaluate the candidate's answer based on how well they address this specific topic.
 
 EVALUATION CRITERIA (0-100 for each):
-1. Completeness (25%): Did they fully address all parts of the question?
-2. Technical Accuracy (30%): Correctness and validity of information provided
-3. Depth & Detail (25%): Level of insight, examples, and elaboration
-4. Clarity & Structure (20%): Organization, articulation, and communication quality
+1. Completeness (25%): Did they cover "${expectedTopic}" thoroughly?
+2. Technical Accuracy (30%): Is their knowledge of "${expectedTopic}" correct?
+3. Depth & Detail (25%): Did they provide ${level} level insights?
+4. Clarity & Structure (20%): Communication quality.
 
 ${rubric}
 
 SCORING GUIDELINES:
-- 90-100: Exceptional answer with deep insights and perfect execution
-- 75-89: Strong answer with good understanding and examples
-- 60-74: Adequate answer covering basics but lacking depth
-- 40-59: Weak answer with gaps or inaccuracies
-- 0-39: Very poor answer with major issues or off-topic
+- 90-100: Exceptional mastery of ${expectedTopic}
+- 75-89: Strong understanding covering key aspects
+- 60-74: Basic understanding but missed advanced nuances
+- 40-59: Weak answer, missed core concepts of ${expectedTopic}
+- 0-39: Off-topic or incorrect
 
 Return JSON with this exact structure:
 {
@@ -44,23 +68,15 @@ Return JSON with this exact structure:
     "depth": <score 0-100>,
     "clarity": <score 0-100>
   },
-  "feedback": "<2-3 sentence constructive feedback>",
-  "strengths": "<what they did well>",
-  "improvements": "<what could be better>"
+  "feedback": "<2-3 sentence feedback focusing on their knowledge of ${expectedTopic}>",
+  "strengths": "<specific strong points>",
+  "improvements": "<what was missing regarding ${expectedTopic}>"
 }`;
 
-        try {
-            const completion = await this.groq.chat.completions.create({
-                messages: [
-                    { role: "system", content: systemMessage },
-                    { role: "user", content: `Question: ${question}\n\nCandidate's Answer: ${answer}` }
-                ],
-                model: this.model,
-                temperature: 0.3,
-                response_format: { type: "json_object" }
-            });
+        const userPrompt = `Question: ${question}\n\nCandidate's Answer: ${answer}`;
 
-            const result = JSON.parse(completion.choices[0]?.message?.content || "{}");
+        try {
+            const result = await this.gemini.evaluateAnswer(systemMessage, userPrompt);
 
             // Ensure all required fields exist
             if (!result.breakdown) {
@@ -77,6 +93,7 @@ Return JSON with this exact structure:
                 );
             }
 
+            console.log(`[Evaluation] Score: ${result.score}, Breakdown:`, result.breakdown);
             return result;
         } catch (error) {
             console.error("Evaluation Block Error:", error);
@@ -88,6 +105,61 @@ Return JSON with this exact structure:
                 improvements: "Please try again"
             };
         }
+    }
+
+    /**
+     * Detect if answer is gibberish/low-quality
+     * Returns true if answer should trigger question elaboration
+     */
+    isGibberishAnswer(answer) {
+        if (!answer || typeof answer !== 'string') return true;
+
+        const trimmed = answer.trim();
+
+        // Too short (less than 15 characters)
+        if (trimmed.length < 15) {
+            console.log(`[Gibberish Detection] Answer too short: ${trimmed.length} chars`);
+            return true;
+        }
+
+        // Check for repetitive words
+        const words = trimmed.toLowerCase().split(/\s+/);
+        if (words.length < 5) {
+            console.log(`[Gibberish Detection] Too few words: ${words.length}`);
+            return true;
+        }
+
+        const uniqueWords = new Set(words);
+        const repetitionRatio = uniqueWords.size / words.length;
+
+        // If less than 40% unique words, likely gibberish or repetitive
+        if (repetitionRatio < 0.4) {
+            console.log(`[Gibberish Detection] High repetition: ${(repetitionRatio * 100).toFixed(0)}% unique`);
+            return true;
+        }
+
+        // Check for common gibberish patterns
+        const gibberishPatterns = [
+            /^(test|testing|hello|hi|ok|okay|yes|no|hmm|uh|um)+\s*$/i,
+            /^[a-z]{1,3}\s+[a-z]{1,3}\s+[a-z]{1,3}$/i, // Random short words
+            /^\d+$/,  // Just numbers
+            /^(.)\1{10,}/, // Repeated characters
+        ];
+
+        if (gibberishPatterns.some(pattern => pattern.test(trimmed))) {
+            console.log(`[Gibberish Detection] Matched gibberish pattern`);
+            return true;
+        }
+
+        return false;
+    }
+
+    _resolveExperienceLevel(preset) {
+        if (!preset) return 'mid';
+        const p = preset.toLowerCase();
+        if (p.includes('fresh') || p.includes('entry') || p.includes('intern')) return 'fresh';
+        if (p.includes('senior') || p.includes('lead') || p.includes('principal')) return 'senior';
+        return 'mid';
     }
 
     _getRubric(experiencePreset, interviewType) {

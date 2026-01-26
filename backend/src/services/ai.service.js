@@ -1,19 +1,25 @@
-const Groq = require('groq-sdk');
+const GeminiService = require('./GeminiService');
 const RoleBlock = require('./blocks/RoleBlock');
 const QuestionGeneratorBlock = require('./blocks/QuestionGeneratorBlock');
 const EvaluationBlock = require('./blocks/EvaluationBlock');
 const FeedbackBlock = require('./blocks/FeedbackBlock');
+const QuestionElaborationBlock = require('./blocks/QuestionElaborationBlock');
 
-// Initialize Provider
-const groq = process.env.GROQ_API_KEY
-  ? new Groq({ apiKey: process.env.GROQ_API_KEY })
+// Initialize Gemini AI Service
+const gemini = process.env.GEMINI_API_KEY
+  ? new GeminiService(process.env.GEMINI_API_KEY)
   : null;
 
-// Initialize Blocks
+if (!gemini) {
+  console.warn('[AI Service] No Gemini API key found. AI features will be disabled.');
+}
+
+// Initialize Blocks with Gemini
 const roleBlock = new RoleBlock();
-const questionBlock = new QuestionGeneratorBlock(groq);
-const evaluationBlock = new EvaluationBlock(groq);
-const feedbackBlock = new FeedbackBlock(groq);
+const questionBlock = new QuestionGeneratorBlock(gemini);
+const evaluationBlock = new EvaluationBlock(gemini);
+const feedbackBlock = new FeedbackBlock(gemini);
+const elaborationBlock = new QuestionElaborationBlock(gemini);
 
 // --- Public API (Facade) ---
 
@@ -21,13 +27,8 @@ const feedbackBlock = new FeedbackBlock(groq);
  * Determine the interview rounds based on type
  */
 function determineTotalRounds(interviewState) {
-  const interviewType = interviewState?.interviewConfig?.interviewType || interviewState;
-  switch (interviewType) {
-    case 'technical': return 10;
-    case 'behavioral': return 8;
-    case 'hr': return 6;
-    default: return 5;
-  }
+  // STRICT RULE: All interviews are now 5 questions exactly as per user request
+  return 5;
 }
 
 /**
@@ -63,8 +64,8 @@ async function evaluateAnswer(question, answer, interviewState) {
  * delegates to FeedbackBlock
  */
 async function generateFinalReport(interviewState) {
-  const { history } = interviewState;
-  return await feedbackBlock.execute(history);
+  const { history, interviewConfig } = interviewState;
+  return await feedbackBlock.execute(history, interviewConfig);
 }
 
 // --- Fallback Helper ---
@@ -265,6 +266,22 @@ function generateReportAudioSummary(reportData) {
   };
 }
 
+/**
+ * Check if answer is gibberish
+ */
+async function isGibberishAnswer(answer) {
+  return evaluationBlock.isGibberishAnswer(answer);
+}
+
+/**
+ * Elaborate question when gibberish is detected
+ */
+async function elaborateQuestion(question, interviewState) {
+  const { interviewConfig } = interviewState;
+  const result = await elaborationBlock.elaborate(question, interviewConfig);
+  return result.elaboratedQuestion;
+}
+
 module.exports = {
   determineTotalRounds,
   generateNextQuestion,
@@ -272,5 +289,7 @@ module.exports = {
   generateFinalReport,
   processAudioAnswer,
   generateQuestionAudioParams,
-  generateReportAudioSummary
+  generateReportAudioSummary,
+  isGibberishAnswer,
+  elaborateQuestion
 };

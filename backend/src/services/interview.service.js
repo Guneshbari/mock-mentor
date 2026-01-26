@@ -103,23 +103,45 @@ async function processNextStep(sessionId, previousAnswerText) {
     };
   }
 
-  // Add answer with evaluation to history
+  // Check for gibberish answer - if detected, elaborate the same question
+  const isGibberish = await aiService.isGibberishAnswer(previousAnswerText);
+
+  if (isGibberish) {
+    console.log(`[Gibberish Detected] Elaborating question for step ${interviewState.currentStep}`);
+
+    // Don't add to history yet - let them try again
+    const elaboratedQuestion = await aiService.elaborateQuestion(currentQuestion, interviewState);
+
+    // Update session without incrementing step
+    setSession(sessionId, interviewState);
+
+    return {
+      nextQuestion: elaboratedQuestion,
+      isElaborated: true,
+      message: "Let me rephrase that question to be more specific...",
+      currentStep: interviewState.currentStep,
+      totalSteps: interviewState.totalSteps,
+      // No evaluation for gibberish - don't show 0 score in UI
+    };
+  }
+
+  // Skip evaluation during interview - only calculate in final report
+  // This saves API calls and makes the interview smoother
+  console.log(`[Interview] Storing answer ${interviewState.currentStep} without evaluation`);
+
+  // Add answer to history WITHOUT evaluation
   interviewState.history.push({
     question: currentQuestion,
     answer: previousAnswerText,
-    evaluation: evaluation, // Include evaluation in history
+    // No evaluation field - will be calculated in final report
   });
 
-  // Dynamically adjust total rounds based on answer quality (adaptive)
-  // Re-evaluate after each answer to potentially extend interview
-  if (interviewState.currentStep >= 3) {
-    const newTotalRounds = aiService.determineTotalRounds(interviewState);
-    interviewState.totalSteps = Math.max(interviewState.currentStep + 1, Math.min(MAX_ROUNDS, newTotalRounds));
-  }
+  // Total steps is fixed at interview start - no dynamic adjustment
+  // This ensures the interview actually ends after totalSteps questions
 
   // Check if we've reached the end (after answering the last question)
   if (interviewState.currentStep >= interviewState.totalSteps) {
-    // Generate final report only once using AI
+    // Generate final report with comprehensive evaluation of ALL answers
     if (!interviewState.finalReport) {
       interviewState.finalReport = await aiService.generateFinalReport(interviewState);
     }
@@ -132,7 +154,7 @@ async function processNextStep(sessionId, previousAnswerText) {
       finalReport: interviewState.finalReport,
       currentStep: interviewState.currentStep,
       totalSteps: interviewState.totalSteps,
-      evaluation: evaluation, // Include evaluation for the last answer
+      // No per-answer evaluation - all evaluations in finalReport
     };
   }
 
@@ -151,7 +173,7 @@ async function processNextStep(sessionId, previousAnswerText) {
     finalReport: null,
     currentStep: interviewState.currentStep,
     totalSteps: interviewState.totalSteps,
-    evaluation: evaluation, // Return evaluation for the submitted answer
+    // No evaluation - only in final report
   };
 }
 

@@ -98,6 +98,9 @@ export function InterviewSessionPanel({
     };
   } | null>(null);
 
+  // Elaboration message
+  const [elaborationMessage, setElaborationMessage] = useState<string | null>(null);
+
   // Audio state
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -281,8 +284,17 @@ export function InterviewSessionPanel({
         onInterviewComplete(interviewConfig.sessionId);
       } else if (data.nextQuestion) {
         setCurrentQuestion(data.nextQuestion);
-        setCurrentStep(data.currentStep);
-        setTotalSteps(data.totalSteps);
+
+        // If it's an elaboration (gibberish detected), don't advance step and show message
+        if (data.isElaborated) {
+          setElaborationMessage(data.message || "Please provide more details.");
+          // Clear message after 5 seconds
+          setTimeout(() => setElaborationMessage(null), 5000);
+        } else {
+          setCurrentStep(data.currentStep);
+          setTotalSteps(data.totalSteps);
+          setElaborationMessage(null);
+        }
 
         // If audio mode, speak the next question
         if (isAudioModeEnabled && data.questionAudio) {
@@ -316,9 +328,12 @@ export function InterviewSessionPanel({
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to submit answer');
-
       const data = await response.json();
+
+      if (!response.ok) {
+        console.error('API Error:', data);
+        throw new Error(data.error || 'Failed to submit answer');
+      }
 
       // Store evaluation for immediate feedback
       storeEvaluation(data);
@@ -344,8 +359,17 @@ export function InterviewSessionPanel({
       } else if (data.nextQuestion) {
         // Continue with next question
         setCurrentQuestion(data.nextQuestion);
-        setCurrentStep(data.currentStep);
-        setTotalSteps(data.totalSteps);
+
+        // If it's an elaboration (gibberish detected), don't advance step and show message
+        if (data.isElaborated) {
+          setElaborationMessage(data.message || "Please provide more details.");
+          // Clear message after 5 seconds
+          setTimeout(() => setElaborationMessage(null), 5000);
+        } else {
+          setCurrentStep(data.currentStep);
+          setTotalSteps(data.totalSteps);
+          setElaborationMessage(null);
+        }
 
         // If audio mode, speak the next question
         if (isAudioModeEnabled && data.questionAudio) {
@@ -461,6 +485,14 @@ export function InterviewSessionPanel({
                     {currentQuestion}
                   </p>
                 </div>
+
+                {elaborationMessage && (
+                  <div className="p-3 bg-primary/10 border border-primary/20 rounded-md animate-fade-in flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary shrink-0" />
+                    <p className="text-sm text-primary font-medium">{elaborationMessage}</p>
+                  </div>
+                )}
+
                 <div className="interview-progress-tracker flex items-center gap-4">
                   <span className="text-sm text-muted-foreground">
                     Question Progress
@@ -683,14 +715,6 @@ export function InterviewSessionPanel({
                                 <p className="text-xs font-medium text-primary">
                                   Q{index + 1}
                                 </p>
-                                {item.score !== undefined && (
-                                  <Badge
-                                    variant={item.score >= 75 ? "default" : item.score >= 50 ? "secondary" : "destructive"}
-                                    className="text-xs h-5"
-                                  >
-                                    {item.score}
-                                  </Badge>
-                                )}
                               </div>
                               <p className="text-sm text-foreground font-medium line-clamp-2">
                                 {item.question}

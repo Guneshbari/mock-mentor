@@ -1,378 +1,204 @@
-# 🎯 Mock Mentor - AI-Powered Interview Practice Platform
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.0-black)](https://nextjs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-green)](https://nodejs.org/)
-[![Groq API](https://img.shields.io/badge/Groq-AI%20Powered-blue)](https://groq.com/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+<div align="center">
 
-An intelligent mock interview platform that provides personalized, adaptive interview practice with real-time evaluation and comprehensive feedback. Built with cutting-edge AI technology to help candidates ace their job interviews.
+# 🤖 Mock Mentor AI
+### Intelligent, Adaptive, Role-Specific Interview Practice
+
+[![Next.js](https://img.shields.io/badge/Next.js-15.1-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Gemini](https://img.shields.io/badge/Google%20Gemini-Flash%202.0-blue?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+
+[Features](#-features) • [Installation](#-getting-started) • [Architecture](#-architecture) • [Roadmaps](#-interview-roadmaps) • [Contributing](#-contributing)
+
+</div>
+
+---
+
+## 🚀 Overview
+
+**Mock Mentor** is a cutting-edge AI interview platform designed to simulate real-world technical interviews with scary accuracy. Unlike generic chatbots, Mock Mentor uses a **structured, role-specific roadmap system** driven by Google's latest **Gemini 2.0 Flash** model to ensure every question is relevant, challenging, and logically progressive.
+
+Whether you are a **Fresh Graduate** looking for your first job or a **Senior Architect** validated your system design skills, Mock Mentor adapts the difficulty and topic depth automatically.
+
+---
 
 ## ✨ Features
 
-### 🎭 Composable Interview Flow
-- **Role Block**: Customizes interview context based on job role and industry
-- **Question Generator**: Creates adaptive, role-specific questions
-- **Memory System**: Tracks full Q&A history with evaluations
-- **Evaluation Block**: Real-time scoring (0-100) with constructive feedback
-- **Feedback Block**: Comprehensive final report with actionable insights
+### 🧠 Intelligent Roadmap Engine
+The core of Mock Mentor is its deterministic yet adaptive roadmap engine. It ensures no two interviews are the same, while strict adherence to professional standards is maintained.
 
-### 🧠 Adaptive Questioning
-- Questions adapt based on **previous answers** - AI analyzes what you said
-- **Role-specific focus** - Questions tailored to your target position
-- **Skills-based targeting** - Covers all required skills progressively
-- **Resume personalization** - References your specific projects and experience
-- **Dynamic difficulty** - Adjusts based on answer quality and experience level
-- **Maximum variation** - Every interview is unique (temperature: 0.7)
+- **5-Step Strict Progression**: Every interview follows a curated 5-stage journey specific to the role.
+- **Experience Tiers**:
+  - 🌱 **Fresh/Entry**: Focus on fundamentals, syntax, and basic problem solving.
+  - 🚀 **Mid-Level**: Focus on implementation, best practices, and edge cases.
+  - 💎 **Senior**: Focus on system design, scalability, trade-offs, and leadership.
+- **Multi-Mode**: Specialized tracks for **Technical**, **HR**, and **Behavioral** interviews.
 
-### 🎙️ Audio Mode
-- **Speech-to-Text**: Groq Whisper Large V3 Turbo for fast, accurate transcription
-- **Text-to-Speech**: Browser-native speech synthesis for questions
-- **Flexible Input**: Switch between voice and text seamlessly
-- **Audio Summary**: Spoken report summary at the end
+### ⚡ Powered by Google Gemini
+- **Gemini 2.0 Flash**: Delivers question generation in <1 second.
+- **Gemini 1.5 Pro**: Powers the "Evaluation Block" for deep, nuanced scoring and feedback.
+- **Context Awareness**: The AI remembers your previous answers to ask relevant follow-up questions (e.g., *"You mentioned using Redis earlier; how did you handle cache invalidation?"*).
 
-### 📊 Comprehensive Evaluation
-- **Real-time scoring** after each answer
-- **Category breakdown**: Communication, Clarity, Technical Depth, Confidence
-- **Detailed feedback** with improvement suggestions
-- **Question-answer history** maintained throughout
-- **Final performance report** with strengths and areas to improve
+### 📊 Comprehensive Analytics
+- **Real-time Feedback**: Instant scoring after every answer.
+- **Final Report**: A detailed breakdown of your performance across:
+  - 🛠️ **Technical Accuracy**
+  - 🗣️ **Communication Clarity**
+  - 🔍 **Depth of Understanding**
+  - ✅ **Completeness**
 
-### 🎨 Modern UI/UX
-- **Dark/Light mode** with smooth transitions
-- **Responsive design** for all devices
-- **Progress tracking** with visual indicators
-- **Memory panel** showing interview history
-- **Clean, professional interface** built with shadcn/ui
+### 🎨 Modern UX
+- **Audio Mode**: Full Speech-to-Text and Text-to-Speech support for a hands-free experience.
+- **Clean Interface**: Built with **Shadcn/UI** and **Framer Motion** for smooth interactions.
+- **Live Progress**: Visual tracking of your 5-step interview journey.
 
-## 🛠️ Tech Stack
-
-### Frontend
-- **Framework**: Next.js 16 (React 19)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **UI Components**: shadcn/ui
-- **Icons**: Lucide React
-- **Audio**: Web Speech API, MediaRecorder API
-
-### Backend
-- **Runtime**: Node.js 18+
-- **Framework**: Express.js
-- **AI Provider**: Groq API
-  - **LLM**: LLaMA 3 8B (8192 context)
-  - **Transcription**: Whisper Large V3 Turbo
-- **Architecture**: Composable blocks pattern
-
-### AI Models
-- **Question Generation**: `llama3-8b-8192` (temperature: 0.7)
-- **Evaluation**: `llama3-8b-8192` (temperature: 0.3, JSON mode)
-- **Speech-to-Text**: `whisper-large-v3-turbo`
+---
 
 ## 🏗️ Architecture
 
+Mock Mentor uses a **Composable Block Architecture** in the backend to separate concerns and allow for easy scalability.
+
+```mermaid
+graph TD
+    A[Client (Next.js)] -->|POST /next| B(Express Server)
+    B --> C{Interview Orchestrator}
+    C -->|Generate| D[Question Block]
+    C -->|Score| E[Evaluation Block]
+    C -->|Report| F[Feedback Block]
+    D -->|Gemini 2.0| G[Google AI]
+    E -->|Gemini 1.5| G
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Frontend (Next.js)                      │
-│   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐    │
-│   │ Setup Screen │ → │ Session View │ → │ Report Screen│    │
-│   └──────────────┘   └──────────────┘   └──────────────┘    │
-└────────────────────────┬────────────────────────────────────┘
-                         │ REST API
-┌────────────────────────┴────────────────────────────────────┐
-│                      Backend (Express)                      │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │              Interview Service (Orchestrator)        │   │
-│  └───────────────────────────┬──────────────────────────┘   │
-│                              │                              │
-│              ┌───────────────┴───────────────┐              │
-│              │         AI Service            │              │
-│              │  ┌──────────────────────────┐ │              │
-│              │  │   Composable Blocks:     │ │              │
-│              │  │  • RoleBlock             │ │              │
-│              │  │  • QuestionGenerator     │ │              │
-│              │  │  • EvaluationBlock       │ │              │
-│              │  │  • FeedbackBlock         │ │              │
-│              │  └──────────────────────────┘ │              │
-│              └───────────────┬───────────────┘              │
-└──────────────────────────────┼──────────────────────────────┘
-                               │
-                      ┌────────┴──────────┐
-                      │     Groq API      │
-                      │   (LLaMA + STT)   │
-                      └───────────────────┘
+
+### Key Services
+| Service | Responsibility | Model Used |
+|---------|----------------|------------|
+| **RoleBlock** | Define specific focus areas per job role | N/A (Static Config) |
+| **QuestionGenerator** | Create adaptive, unique questions | `gemini-2.0-flash-exp` |
+| **EvaluationBlock** | Score answers against rubrics | `gemini-1.5-pro` |
+| **FeedbackBlock** | Compile final detailed report | `gemini-1.5-pro` |
+
+---
+
+## 🗺️ Interview Roadmaps
+
+Every interview follows a specific path. Here are examples of how the "Frontend Developer" track differs by level:
+
+| Step | 🌱 Fresh / Junior | 💎 Senior / Lead |
+|------|-------------------|------------------|
+| **1** | **HTML/CSS & DOM** <br>*(Box model, Semantic HTML)* | **System Architecture** <br>*(Scalability, Monorepos)* |
+| **2** | **JavaScript Basics** <br>*(ES6+, Arrays, Events)* | **Performance Engineering** <br>*(Web Vitals, SSR vs CSR)* |
+| **3** | **React Basics** <br>*(Props, State, Components)* | **Micro-frontends** <br>*(Module Federation, Strategy)* |
+| **4** | **Debugging** <br>*(Console, Common errors)* | **Advanced Security** <br>*(XSS/CSRF, Auth patterns)* |
+| **5** | **Version Control** <br>*(Git basics)* | **Leadership & Strategy** <br>*(Mentoring, Tech choices)* |
+
+---
+
+## 🛠️ Project Structure
+
+```text
+mock-mentor/
+├── backend/                  # Express.js API
+│   ├── src/
+│   │   ├── services/         # Core Business Logic
+│   │   │   ├── blocks/       # AI Logic Blocks (Question, Eval, Role)
+│   │   │   ├── GeminiService.js
+│   │   │   └── ai.service.js
+│   │   ├── controllers/      # API Route Controllers
+│   │   └── server.js         # Entry Point
+│   ├── .env                  # Secrets (API Keys)
+│   └── package.json
+│
+├── frontend/                 # Next.js Application
+│   ├── app/                  # App Router Pages
+│   ├── components/           # React Components (Shadcn)
+│   ├── lib/                  # Utilities
+│   └── package.json
+│
+└── README.md
 ```
+
+---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ and npm
-- Groq API key ([Get one here](https://console.groq.com/))
+- **Node.js** 18.0 or higher
+- **npm** or **yarn**
+- **Google Gemini API Key** (Get free key at [aistudio.google.com](https://aistudio.google.com/))
 
 ### Installation
 
-1. **Clone the repository**
-```bash
-git clone https://github.com/yourusername/mock-mentor.git
-cd mock-mentor
-```
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/yourusername/mock-mentor.git
+   cd mock-mentor
+   ```
 
-2. **Setup Backend**
-```bash
-cd backend
-npm install
+2. **Backend Setup**
+   ```bash
+   cd backend
+   npm install
+   
+   # Create Environment Configuration
+   echo "PORT=8000" > .env
+   echo "GEMINI_API_KEY=your_key_here" >> .env
+   ```
 
-# Create .env file
-echo "PORT=8000" > .env
-echo "GROQ_API_KEY=your_groq_api_key_here" >> .env
-echo "GROQ_MODEL=llama3-8b-8192" >> .env
-```
+3. **Frontend Setup**
+   ```bash
+   cd ../frontend
+   npm install
+   ```
 
-3. **Setup Frontend**
-```bash
-cd ../frontend
-npm install
-```
+4. **Run the Application**
+   Open two terminals:
+   
+   **Terminal 1 (Backend)**
+   ```bash
+   cd backend
+   npm run dev
+   ```
+   
+   **Terminal 2 (Frontend)**
+   ```bash
+   cd frontend
+   npm run dev
+   ```
 
-### Running the Application
-
-**Terminal 1 - Backend:**
-```bash
-cd backend
-node src/server.js
-```
-Server runs on: http://localhost:8000
-
-**Terminal 2 - Frontend:**
-```bash
-cd frontend
-npm run dev
-```
-App runs on: http://localhost:3000
-
-### Environment Variables
-
-#### Backend (`.env`)
-```env
-PORT=8000                              # Backend server port
-GROQ_API_KEY=gsk_xxxxxxxxxxxxx        # Your Groq API key (required)
-GROQ_MODEL=llama3-8b-8192             # LLM model for questions
-```
-
-#### Frontend
-The frontend proxies API calls to `http://localhost:8000` automatically via Next.js API routes.
-
-## 📖 Usage Guide
-
-### 1. **Setup Interview**
-- Select **Interview Type**: HR, Technical, or Behavioral
-- Enter **Job Role**: e.g., "Frontend Developer"
-- Add **Skills**: e.g., React, JavaScript, CSS (press Enter after each)
-- Paste **Resume/Background**: Your experience and projects
-- Choose **Experience Level**: Fresh Graduate, Junior, or Senior Developer
-- Toggle **Audio Mode** (optional): Enable voice input/output
-
-### 2. **Take Interview**
-- Read the question carefully
-- **Type your answer** OR **Record voice** (if audio mode enabled)
-- Click "Submit Answer"
-- View real-time evaluation score and feedback
-- Answer 5-10 adaptive questions (varies based on role)
-
-### 3. **View Report**
-- **Overall Score**: 0-100 rating
-- **Category Scores**: Communication, Clarity, Technical Depth, Confidence
-- **Strengths**: What you did well
-- **Areas for Improvement**: Where to focus
-- **Actionable Feedback**: Specific improvement tips
-- **Q&A History**: Full interview transcript with summaries
-
-## 🎯 How It Works
-
-### Adaptive Questioning Algorithm
-
-1. **First Question** - Role-specific opener based on resume
-```
-Input: Frontend Developer + React/JS skills + Resume mentioning "e-commerce dashboard"
-Output: "Tell me about the e-commerce dashboard you built. What challenges did you face with state management?"
-```
-
-2. **Subsequent Questions** - Analyze previous answer
-```
-Answer: "I used Redux but faced async action issues..."
-AI Analysis: Mentioned Redux + async challenges
-Next Q: "How did you handle API calls - Redux Thunk or Saga?"
-```
-
-3. **Adaptive Strategies**
-- **Deep Dive**: Follow-up on mentioned topics
-- **Related Exploration**: Expand to related concepts
-- **Gap Probing**: Ask "why/how" for shallow answers
-- **Skill Pivoting**: Move to next required skill
-- **Difficulty Adjustment**: Increase/decrease based on performance
-
-### Evaluation System
-
-Each answer is evaluated on:
-- **Technical Accuracy** (for technical interviews)
-- **Clarity of Communication**
-- **Depth of Understanding**
-- **Relevance to Question**
-- **Experience Level Appropriateness**
-
-Scores are aggregated in the final report with category breakdowns.
-
-## 📡 API Endpoints
-
-### `POST /api/interview/start`
-Initialize new interview session
-
-**Request:**
-```json
-{
-  "interviewConfig": {
-    "interviewType": "technical",
-    "role": "Frontend Developer",
-    "skills": ["React", "JavaScript"],
-    "resumeText": "...",
-    "experiencePreset": "junior",
-    "audioMode": false
-  }
-}
-```
-
-**Response:**
-```json
-{
-  "sessionId": "uuid",
-  "firstQuestion": "...",
-  "totalSteps": 10,
-  "questionAudio": { ... }
-}
-```
-
-### `POST /api/interview/next`
-Submit answer and get next question
-
-**Request:**
-```json
-{
-  "sessionId": "uuid",
-  "previousAnswerText": "...",
-  "inputMode": "text",
-  "audioMode": false
-}
-```
-
-**Response:**
-```json
-{
-  "nextQuestion": "...",
-  "currentStep": 2,
-  "totalSteps": 10,
-  "evaluation": {
-    "score": 75,
-    "feedback": "..."
-  },
-  "finalReport": null
-}
-```
-
-### `GET /api/interview/report?sessionId=uuid`
-Retrieve final interview report
-
-**Response:**
-```json
-{
-  "finalReport": {
-    "overallScore": 78,
-    "categoryScores": { ... },
-    "identifiedStrengths": [...],
-    "areasForImprovement": [...],
-    "actionableFeedback": [...],
-    "questionAnswerHistory": [...]
-  }
-}
-```
-
-## 🎨 Screenshots
-
-<!-- Add screenshots here -->
-![Setup Screen](docs/screenshots/setup.png)
-![Interview Session](docs/screenshots/session.png)
-![Final Report](docs/screenshots/report.png)
-
-## 🔒 Security & Privacy
-
-- ✅ No data persistence - sessions are in-memory only
-- ✅ Audio files are immediately deleted after transcription
-- ✅ API keys stored in environment variables
-- ✅ CORS configured for localhost development
-- ⚠️ Add authentication for production deployment
-
-## 🐛 Troubleshooting
-
-### Backend won't start
-- Check if port 8000 is available: `netstat -ano | findstr :8000`
-- Verify `GROQ_API_KEY` in `.env` file
-- Run `npm install` in backend directory
-
-### Frontend can't connect to backend
-- Ensure backend is running on port 8000
-- Check Next.js API routes are properly configured
-- Verify no CORS errors in browser console
-
-### Audio mode not working
-- Grant microphone permissions in browser
-- Use Chrome/Edge for best WebM support
-- Check Groq API key has Whisper access
-- See detailed logs in backend terminal with `[Audio]` prefix
-
-### Questions are too generic
-- Ensure resume text is detailed and specific
-- Add relevant skills in the setup screen
-- Choose appropriate experience level
-- Check backend logs for AI service errors
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **Groq** for providing fast, affordable AI inference
-- **Meta** for LLaMA 3 model
-- **OpenAI** for Whisper model architecture
-- **Vercel** for Next.js framework
-- **shadcn** for beautiful UI components
-
-## 📬 Contact
-
-For questions or feedback, please open an issue or reach out to:
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
-
-## 🗺️ Roadmap
-
-- [ ] Add more interview types (System Design, Coding)
-- [ ] Support multiple languages
-- [ ] Interview scheduling and history
-- [ ] Performance analytics dashboard
-- [ ] Export reports as PDF
-- [ ] Mobile app (React Native)
-- [ ] User authentication and profiles
-- [ ] Share interview reports
+   Visit **http://localhost:3000** to start your interview!
 
 ---
 
-**Built with ❤️ using Next.js, Node.js, and Groq AI**
+## � Security & Deployment
 
-⭐ Star this repo if you found it helpful!
+- **Environment Isolation**: API keys are strictly kept in backend `.env` and never exposed to the client.
+- **Deployment Ready**:
+  - **Frontend**: One-click deploy to [Vercel](https://vercel.com).
+  - **Backend**: Ready for [Render](https://render.com) or [Railway](https://railway.app).
+  - **Docker**: Includes Dockerfile for containerized deployment (optional).
+
+---
+
+## 🤝 Contributing
+
+We love contributions! Please follow these steps:
+
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
+4. Push to the branch (`git push origin feature/AmazingFeature`).
+5. Open a Pull Request.
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
+
+---
+
+<div align="center">
+  <sub>Built by <b>Gunesh Bari</b></sub>
+</div>

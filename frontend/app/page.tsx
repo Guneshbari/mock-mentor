@@ -1,20 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { InterviewSetupForm, type InterviewConfiguration } from "@/components/interview-setup";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function InterviewSetupPage() {
   const router = useRouter();
 
-  // Clear any existing session data when landing on setup page
-  // This ensures a fresh start, especially after server restarts
-  useEffect(() => {
-    sessionStorage.removeItem('interviewSession');
-    sessionStorage.removeItem('reportSessionId');
-    sessionStorage.removeItem('audioModeEnabled');
-  }, []);
+
+  // Session storage is automatically cleared by browser on page refresh
+  // No need for manual clearing that causes refresh loops
 
   const handleStartInterview = (config: InterviewConfiguration & {
     sessionId: string;

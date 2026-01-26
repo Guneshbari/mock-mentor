@@ -40,42 +40,8 @@ export default function InterviewSessionPage() {
       try {
         const data = JSON.parse(stored);
 
-        // Validate session with backend by making a test request
-        // This ensures the session is still valid after server restarts
-        try {
-          const response = await fetch('/api/interview/next', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              sessionId: data.sessionId,
-              previousAnswerText: '',
-              inputMode: 'validation'
-            }),
-          });
-
-          // If session is invalid (400/404), clear session and redirect to home
-          if (!response.ok) {
-            const errorData = await response.json();
-            if (errorData.error && errorData.error.includes('Invalid sessionId')) {
-              console.log('Session invalid or expired, redirecting to setup...');
-              sessionStorage.removeItem('interviewSession');
-              sessionStorage.removeItem('reportSessionId');
-              sessionStorage.removeItem('audioModeEnabled');
-              router.push('/');
-              return;
-            }
-          }
-        } catch (validationError) {
-          console.error('Session validation failed:', validationError);
-          // If backend is unreachable or session is invalid, redirect to setup
-          sessionStorage.removeItem('interviewSession');
-          sessionStorage.removeItem('reportSessionId');
-          sessionStorage.removeItem('audioModeEnabled');
-          router.push('/');
-          return;
-        }
-
-        // Session is valid, proceed with interview
+        // Session data exists in sessionStorage, use it
+        // Backend will validate when actual answers are submitted
         setSessionData(data);
         setIsValidating(false);
       } catch (error) {

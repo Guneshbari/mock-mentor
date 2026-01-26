@@ -27,7 +27,7 @@ export default function InterviewReportPage() {
   useEffect(() => {
     const sessionId = sessionStorage.getItem('reportSessionId');
     const audioModeEnabled = sessionStorage.getItem('audioModeEnabled') === 'true';
-    
+
     if (!sessionId) {
       // No sessionId, redirect to setup
       router.push('/');
@@ -39,14 +39,23 @@ export default function InterviewReportPage() {
       try {
         const audioParam = audioModeEnabled ? '&audioSummary=true' : '';
         const response = await fetch(`/api/interview/report?sessionId=${sessionId}${audioParam}`);
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch report');
         }
 
         const data = await response.json();
+
+        // Check for specific error messages
+        if (!response.ok) {
+          if (data.error === 'Invalid sessionId' || data.error === 'Interview not completed yet') {
+            throw new Error(`Session expired or interview not completed. Please start a new interview.`);
+          }
+          throw new Error(data.error || 'Failed to fetch report');
+        }
+
         setFinalReport(data.finalReport);
-        
+
         // Set audio summary if available
         if (data.audioSummary) {
           setAudioSummary(data.audioSummary);
@@ -135,8 +144,8 @@ export default function InterviewReportPage() {
   return (
     <main className="interview-app-container">
       <ThemeToggle />
-      <InterviewReportSummary 
-        evaluationResults={finalReport} 
+      <InterviewReportSummary
+        evaluationResults={finalReport}
         onRestartInterview={handleRestartInterview}
         audioSummary={audioSummary}
       />
