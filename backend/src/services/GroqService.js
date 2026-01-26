@@ -13,7 +13,7 @@ class GroqService {
         }
 
         this.groq = new Groq({ apiKey });
-        this.modelName = process.env.GROQ_MODEL || 'llama3-70b-8192'; // Use 70b for better reasoning
+        this.modelName = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'; // Latest stable model
     }
 
     /**
