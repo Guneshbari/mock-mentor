@@ -14,8 +14,8 @@ class GeminiService {
 
         this.genAI = new GoogleGenerativeAI(apiKey);
         this.questionModel = process.env.QUESTION_MODEL || 'gemini-2.0-flash-exp';
-        this.evaluationModel = process.env.EVALUATION_MODEL || 'gemini-1.5-pro';
-        this.reportModel = process.env.REPORT_MODEL || 'gemini-1.5-pro';
+        this.evaluationModel = process.env.EVALUATION_MODEL || 'gemini-2.0-flash-exp'; // Changed from 1.5-pro for reliability
+        this.reportModel = process.env.REPORT_MODEL || 'gemini-2.0-flash-exp'; // Changed from 1.5-pro for reliability
     }
 
     /**
