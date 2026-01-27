@@ -6,11 +6,11 @@
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.1-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Groq](https://img.shields.io/badge/Groq-Llama%203-blue?style=for-the-badge&logo=ai&logoColor=white)](https://groq.com/)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-2.0_Flash-blue?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
-[Features](#-features) • [Installation](#-getting-started) • [Architecture](#-architecture) • [Roadmaps](#-interview-roadmaps) • [Contributing](#-contributing)
+[Features](#-features) • [Installation](#-getting-started) • [Architecture](#-architecture) • [Roadmaps](#-interview-roadmaps) • [API Docs](API.md) • [Contributing](#-contributing) • [Changelog](CHANGELOG.md)
 
 </div>
 
@@ -18,7 +18,7 @@
 
 ## 🚀 Overview
 
-**Mock Mentor** is a cutting-edge AI interview platform designed to simulate real-world technical interviews. It uses the ultra-fast **Groq LPU™ Inference Engine** running **Meta's Llama 3** to provide sub-second responses and human-like reasoning.
+**Mock Mentor** is a cutting-edge AI interview platform designed to simulate real-world technical interviews. It uses **Google's Gemini 2.0 Flash** AI model to provide intelligent, adaptive questioning and comprehensive evaluation with human-like reasoning.
 
 ---
 
@@ -29,10 +29,10 @@
 - **Roles & Levels**: Customized for Freshers, Mid-level, and Seniors.
 - **Adaptive**: Adjusts difficulty based on your answers.
 
-### ⚡ Powered by Groq AI
-- **Speed**: <500ms latency for questions using Llama 3 70B.
-- **Depth**: Detailed evaluation using heavy reasoning models.
-- **Audio**: Whisper Large V3 for accurate speech-to-text.
+### ⚡ Powered by Google Gemini AI
+- **Speed**: Fast response times using Gemini 2.0 Flash.
+- **Intelligence**: Advanced reasoning with Gemini's multimodal capabilities.
+- **Flexibility**: Support for multiple AI models with easy configuration.
 
 ### 📊 Comprehensive Analytics
 - **Real-time Feedback**: Instant scoring after every answer.
@@ -60,17 +60,19 @@ graph TD
     C -->|Generate| D["Question Block"]
     C -->|Score| E["Evaluation Block"]
     C -->|Report| F["Feedback Block"]
-    D -->|"Llama 3 70B"| G["Groq AI"]
-    E -->|"Llama 3 70B"| G
+    D -->|"Gemini 2.0 Flash"| G["Google Gemini AI"]
+    E -->|"Gemini 2.0 Flash"| G
 ```
 
 ### Key Services
 | Service | Responsibility | Model Used |
 |---------|----------------|------------|
-| **RoleBlock** | Define specific focus areas per job role | N/A (Static Config) |
-| **QuestionGenerator** | Create adaptive, unique questions | `llama3-70b-8192` |
-| **EvaluationBlock** | Score answers against rubrics | `llama3-70b-8192` |
-| **FeedbackBlock** | Compile final detailed report | `llama3-70b-8192` |
+| **RoleBlock** | Define specific focus areas per job role | N/A (Role Strategies) |
+| **QuestionGenerator** | Create adaptive, unique questions | `gemini-2.0-flash-exp` |
+| **EvaluationBlock** | Score answers against rubrics | `gemini-2.0-flash-exp` |
+| **FeedbackBlock** | Compile final detailed report | `gemini-2.0-flash-exp` |
+| **AnswerAnalyzer** | Analyze answer quality and depth | `gemini-2.0-flash-exp` |
+| **QuestionElaboration** | Elaborate on questions for clarity | `gemini-2.0-flash-exp` |
 
 ---
 
@@ -86,7 +88,30 @@ Every interview follows a specific path. Here are examples of how the "Frontend 
 | **4** | **Debugging** <br>*(Console, Common errors)* | **Advanced Security** <br>*(XSS/CSRF, Auth patterns)* |
 | **5** | **Version Control** <br>*(Git basics)* | **Leadership & Strategy** <br>*(Mentoring, Tech choices)* |
 
+
+### Supported Roles
+
+Mock Mentor supports **14 different job roles**, each with customized questions:
+
+- 💻 Frontend Developer
+- ⚙️ Backend Developer
+- 🔄 Full Stack Developer
+- 🚀 DevOps Engineer
+- 📊 Data Scientist
+- 🤖 Machine Learning Engineer
+- 📱 Mobile Developer
+- 🧪 QA Engineer
+- 📋 Product Manager
+- 🎨 UI/UX Designer
+- 🏛️ Software Architect
+- ☁️ Cloud Engineer
+- 🔒 Security Engineer
+- 🗄️ Database Administrator
+
+Each role has **45 unique questions** across all interview types and experience levels. For detailed roadmaps, see [ROADMAPS.md](ROADMAPS.md).
+
 ---
+
 
 ## 🛠️ Project Structure
 
@@ -95,9 +120,18 @@ mock-mentor/
 ├── backend/                  # Express.js API
 │   ├── src/
 │   │   ├── services/         # Core Business Logic
-│   │   │   ├── blocks/       # AI Logic Blocks (Question, Eval, Role)
-│   │   │   ├── GeminiService.js
-│   │   │   └── ai.service.js
+│   │   │   ├── blocks/       # AI Logic Blocks
+│   │   │   │   ├── RoleBlock.js
+│   │   │   │   ├── RoleStrategies.js
+│   │   │   │   ├── QuestionGeneratorBlock.js
+│   │   │   │   ├── QuestionElaborationBlock.js
+│   │   │   │   ├── EvaluationBlock.js
+│   │   │   │   ├── AnswerAnalyzer.js
+│   │   │   │   └── FeedbackBlock.js
+│   │   │   ├── GeminiService.js    # Google Gemini Integration
+│   │   │   ├── GroqService.js      # Groq Integration (Optional)
+│   │   │   ├── ai.service.js       # AI Orchestration
+│   │   │   └── interview.service.js
 │   │   ├── controllers/      # API Route Controllers
 │   │   └── server.js         # Entry Point
 │   ├── .env                  # Secrets (API Keys)
@@ -119,7 +153,9 @@ mock-mentor/
 ### Prerequisites
 - **Node.js** 18.0 or higher
 - **npm** or **yarn**
-- **Google Gemini API Key** (Get free key at [aistudio.google.com](https://aistudio.google.com/))
+- **Google Gemini API Key** or **Groq API Key**
+  - Gemini: Get free key at [Google AI Studio](https://aistudio.google.com/)
+  - Groq (Optional): Get key at [console.groq.com](https://console.groq.com/)
 
 ### Installation
 
@@ -136,7 +172,10 @@ mock-mentor/
    
    # Create Environment Configuration
    echo "PORT=8000" > .env
-   echo "GEMINI_API_KEY=your_key_here" >> .env
+   # For Google Gemini (Recommended)
+   echo "GEMINI_API_KEY=your_gemini_key_here" >> .env
+   # OR for Groq (Optional - if you prefer Groq)
+   echo "GROQ_API_KEY=your_groq_key_here" >> .env
    ```
 
 3. **Frontend Setup**

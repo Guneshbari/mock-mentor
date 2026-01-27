@@ -28,7 +28,8 @@ We recommend [Render](https://render.com) for the backend because it provides a 
    - **Build Command**: `npm install`
    - **Start Command**: `npm start`
 6. **Environment Variables** (Add these in the "Environment" tab):
-   - `GROQ_API_KEY`: *[Your Groq API Key]*
+   - `GEMINI_API_KEY`: *[Your Google Gemini API Key from https://aistudio.google.com/]* (Required if using Gemini)
+   - `GROQ_API_KEY`: *[Your Groq API Key]* (Optional - if you prefer Groq instead)
    - `NODE_ENV`: `production`
 
 7. Click **Create Web Service**.
