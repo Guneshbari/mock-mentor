@@ -222,10 +222,46 @@ export function InterviewSessionPanel({
     if (isRecording) {
       const audioBase64 = await stopRecording();
       if (audioBase64) {
-        await submitAudioAnswer(audioBase64);
+        await transcribeAudioOnly(audioBase64);
       }
     } else {
       startRecording();
+    }
+  };
+
+  // Transcribe audio without submitting
+  const transcribeAudioOnly = async (audioBase64: string) => {
+    setTranscriptionPreview("Transcribing...");
+    setAudioError(null);
+
+    try {
+      const response = await fetch('/api/interview/transcribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          audioAnswer: audioBase64,
+          audioMimeType: 'audio/webm',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setAudioError(data.error || 'Could not transcribe audio. Please try again or type your answer.');
+        setTranscriptionPreview("");
+        return;
+      }
+
+      // Display transcribed text in the text box
+      setCandidateAnswer(data.transcribedText);
+      setTranscriptionPreview("");
+
+      // Clear any previous errors
+      setAudioError(null);
+    } catch (error) {
+      console.error('Error transcribing audio:', error);
+      setAudioError('Failed to transcribe audio. Please try again or type your answer.');
+      setTranscriptionPreview("");
     }
   };
 
@@ -263,6 +299,9 @@ export function InterviewSessionPanel({
       const transcribedAnswer = data.transcribedAnswer || candidateAnswer || "(Audio answer)";
       setTranscriptionPreview("");
 
+      // Display the transcribed text in the text box so user can see what was transcribed
+      setCandidateAnswer(transcribedAnswer);
+
       // Store evaluation for immediate feedback
       storeEvaluation(data);
 
@@ -277,7 +316,9 @@ export function InterviewSessionPanel({
 
       const updatedHistory = [...questionAnswerHistory, newAnswerEntry];
       setQuestionAnswerHistory(updatedHistory);
-      setCandidateAnswer("");
+
+      // Clear the answer after a brief moment so user can see the transcription
+      setTimeout(() => setCandidateAnswer(""), 2000);
 
       // Check if we received finalReport or nextQuestion
       if (data.finalReport) {

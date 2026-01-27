@@ -123,6 +123,44 @@ async function processNextStep(req, res) {
 }
 
 /**
+ * Transcribe audio without submitting
+ * POST /api/interview/transcribe
+ */
+async function transcribeAudio(req, res) {
+  try {
+    console.log('transcribeAudio called');
+    const { audioAnswer, audioMimeType } = req.body;
+
+    if (!audioAnswer) {
+      return res.status(400).json({ error: 'audioAnswer is required' });
+    }
+
+    const mimeType = audioMimeType || 'audio/webm';
+    const audioResult = await aiService.processAudioAnswer(audioAnswer, mimeType);
+
+    if (audioResult.success) {
+      console.log('Audio transcribed successfully:', audioResult.transcribedText.substring(0, 100));
+      return res.json({
+        success: true,
+        transcribedText: audioResult.transcribedText
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: audioResult.error,
+        needsRetry: audioResult.needsRetry
+      });
+    }
+  } catch (error) {
+    console.error('Error in transcribeAudio:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to transcribe audio. Please try again.'
+    });
+  }
+}
+
+/**
  * Get final report for a session
  * GET /api/interview/report
  */
@@ -164,4 +202,5 @@ module.exports = {
   startInterview,
   processNextStep,
   getFinalReport,
+  transcribeAudio,
 };
