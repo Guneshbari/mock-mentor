@@ -42,9 +42,12 @@
   - 🔍 **Depth of Understanding**
   - ✅ **Completeness**
 
-### 🎨 Modern UX
+### 🎨 Modern, Professional UI
+- **Professional Design**: Clean blue color scheme with enhanced typography and spacing.
+- **Responsive Layout**: Seamless experience across desktop, tablet, and mobile devices.
 - **Audio Mode**: Full Speech-to-Text and Text-to-Speech support for a hands-free experience.
-- **Clean Interface**: Built with **Shadcn/UI** and **Framer Motion** for smooth interactions.
+- **Modern Components**: Built with **Shadcn/UI**, **Tailwind CSS**, and smooth animations.
+- **Theme Support**: Beautiful light and dark modes with system preference detection.
 - **Live Progress**: Visual tracking of your 5-step interview journey.
 
 ---
@@ -207,7 +210,7 @@ mock-mentor/
 
 - **Environment Isolation**: API keys are strictly kept in backend `.env` and never exposed to the client.
 - **Deployment Ready**:
-  - **Frontend**: One-click deploy to [Vercel](https://vercel.com).
+  - **Frontend**: Deploy to platforms like Vercel, Netlify, or any static hosting service.
   - **Backend**: Ready for [Render](https://render.com) or [Railway](https://railway.app).
   - **Docker**: Includes Dockerfile for containerized deployment (optional).
 

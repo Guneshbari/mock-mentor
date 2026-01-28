@@ -1,16 +1,26 @@
 import React from "react"
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
+import { Inter } from 'next/font/google'
+import { ThemeProvider } from 'next-themes'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  display: 'swap',
+  variable: '--font-sans',
+});
 
 export const metadata: Metadata = {
-  title: 'Composable AI Mock Interviewer',
-  description: 'Practice interviews with AI-powered feedback and adaptive questioning',
-  generator: 'v0.app',
+  title: 'Mock Mentor AI - Interview Practice Platform',
+  description: 'Practice interviews with AI-powered feedback, adaptive questioning, and personalized insights to ace your next job interview',
+  keywords: ['interview practice', 'AI interviewer', 'mock interview', 'job interview prep', 'interview coaching'],
+  authors: [{ name: 'Mock Mentor Team' }],
+  metadataBase: new URL('https://mockmentor.ai'),
+  openGraph: {
+    title: 'Mock Mentor AI - Interview Practice Platform',
+    description: 'Master your interview skills with AI-powered practice sessions',
+    type: 'website',
+  },
   icons: {
     icon: [
       {
@@ -36,10 +46,16 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={`font-sans antialiased`}>
-        {children}
-        <Analytics />
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans antialiased`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )

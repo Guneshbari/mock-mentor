@@ -112,41 +112,41 @@ export function InterviewReportSummary({ evaluationResults, onRestartInterview, 
   ];
 
   return (
-    <div className="min-h-screen page-gradient-bg p-4 lg:p-6">
-      <div className="max-w-5xl mx-auto flex flex-col gap-5 animate-fade-in">
+    <div className="min-h-screen page-gradient-bg p-4 lg:p-6 pt-14">
+      <div className="max-w-6xl mx-auto flex flex-col gap-6 animate-fade-up">
         {/* Header */}
-        <Card className="report-header-card shadow-xl border-border/50 bg-card">
-          <CardHeader className="text-center pb-5">
-            <div className="flex justify-center mb-5">
-              <div className="w-18 h-18 rounded-full bg-primary/10 flex items-center justify-center shadow-[0_0_20px_4px_oklch(0.55_0.18_280_/_0.15)]">
-                <Trophy className="h-9 w-9 text-primary" />
+        <Card className="report-header-card elevation-3 border-border/30 glass-card">
+          <CardHeader className="text-center pb-6">
+            <div className="flex justify-center mb-6 animate-scale-in">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center ring-4 ring-primary/10 shadow-2xl animate-subtle-pulse">
+                <Trophy className="h-10 w-10 text-primary" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-semibold text-foreground tracking-tight text-balance">
-              Interview Performance Report
+            <CardTitle className="text-4xl font-bold text-foreground tracking-tight">
+              Performance Report
             </CardTitle>
-            <p className="text-muted-foreground text-sm mt-3">
-              Here&apos;s how you performed in your mock interview session
+            <p className="text-muted-foreground text-base mt-3 max-w-xl mx-auto leading-relaxed">
+              Your interview has been evaluated. Review your performance metrics and personalized feedback below.
             </p>
           </CardHeader>
         </Card>
 
         {/* Overall Score Card */}
-        <Card className="overall-score-card shadow-xl border-border/50 bg-card">
-          <CardContent className="pt-6 pb-6">
-            <div className="flex flex-col items-center gap-3">
-              <p className="text-muted-foreground text-sm font-medium uppercase tracking-wide">Overall Score</p>
-              <div className={`score-display flex items-baseline gap-1 px-6 py-3 rounded-xl ${getScoreBgClass(evaluationResults.overallScore)}`}>
+        <Card className="overall-score-card elevation-4 border-border/30 glass-card animate-scale-in" style={{ animationDelay: '100ms' }}>
+          <CardContent className="pt-8 pb-8">
+            <div className="flex flex-col items-center gap-4">
+              <p className="text-muted-foreground text-base font-bold uppercase tracking-wider">Overall Score</p>
+              <div className={`score-display flex items-baseline gap-2 px-8 py-4 rounded-2xl shadow-xl transition-all duration-300 hover:scale-105 ${getScoreBgClass(evaluationResults.overallScore)}`}>
                 <span
-                  className={`text-6xl font-bold ${getScoreColorClass(evaluationResults.overallScore)}`}
+                  className={`text-7xl font-black ${getScoreColorClass(evaluationResults.overallScore)}`}
                 >
                   {evaluationResults.overallScore}
                 </span>
-                <span className="text-xl text-muted-foreground">/100</span>
+                <span className="text-2xl text-muted-foreground font-semibold">/100</span>
               </div>
               <Badge
                 variant="secondary"
-                className={`px-4 py-1.5 text-sm font-medium bg-muted ${getScoreColorClass(evaluationResults.overallScore)} border-0`}
+                className={`px-5 py-2 text-base font-bold bg-muted ${getScoreColorClass(evaluationResults.overallScore)} border-0 shadow-md`}
               >
                 {getScoreLabel(evaluationResults.overallScore)}
               </Badge>
@@ -155,30 +155,30 @@ export function InterviewReportSummary({ evaluationResults, onRestartInterview, 
         </Card>
 
         {/* Category Scores Grid */}
-        <div className="category-scores-grid grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {categoryMetrics.map((category) => (
-            <Card key={category.label} className="category-metric-card shadow-md border-border/50 bg-card hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
-              <CardContent className="pt-4 pb-4">
-                <div className="flex flex-col gap-2">
+        <div className="category-scores-grid grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in" style={{ animationDelay: '200ms' }}>
+          {categoryMetrics.map((category, index) => (
+            <Card key={category.label} className="category-metric-card elevation-2 border-border/30 glass-card hover:elevation-3 hover:-translate-y-1 transition-all duration-300 group" style={{ animationDelay: `${300 + index * 50}ms` }}>
+              <CardContent className="pt-5 pb-5">
+                <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
-                      <category.icon className="h-3.5 w-3.5 text-primary" />
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-200">
+                      <category.icon className="h-5 w-5 text-primary" />
                     </div>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm font-semibold text-foreground">
                       {category.label}
                     </span>
                   </div>
-                  <div className="flex items-baseline gap-1 mt-1">
+                  <div className="flex items-baseline gap-1">
                     <span
-                      className={`text-2xl font-bold ${getScoreColorClass(category.score)}`}
+                      className={`text-3xl font-black ${getScoreColorClass(category.score)}`}
                     >
                       {category.score}
                     </span>
-                    <span className="text-xs text-muted-foreground">/100</span>
+                    <span className="text-sm text-muted-foreground font-semibold">/100</span>
                   </div>
                   <Progress
                     value={category.score}
-                    className="h-1.5 bg-muted"
+                    className="h-2 bg-muted"
                   />
                 </div>
               </CardContent>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { InterviewSessionPanel } from "@/components/interview-session";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { Navbar } from "@/components/navbar";
 import type { InterviewConfiguration } from "@/components/interview-setup";
 
 interface QuestionAudio {
@@ -68,18 +68,18 @@ export default function InterviewSessionPage() {
 
   if (isValidating || !sessionData) {
     return (
-      <main className="interview-app-container">
-        <ThemeToggle />
-        <div className="min-h-screen flex items-center justify-center">
+      <>
+        <Navbar />
+        <main className="min-h-screen flex items-center justify-center pt-14">
           <p className="text-muted-foreground">Validating session...</p>
-        </div>
-      </main>
+        </main>
+      </>
     );
   }
 
   return (
-    <main className="interview-app-container">
-      <ThemeToggle />
+    <>
+      <Navbar />
       <InterviewSessionPanel
         interviewConfig={{
           ...sessionData.interviewConfig,
@@ -90,6 +90,6 @@ export default function InterviewSessionPage() {
         }}
         onInterviewComplete={handleInterviewComplete}
       />
-    </main>
+    </>
   );
 }

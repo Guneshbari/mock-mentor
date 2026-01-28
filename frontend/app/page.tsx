@@ -2,11 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { InterviewSetupForm, type InterviewConfiguration } from "@/components/interview-setup";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { Navbar } from "@/components/navbar";
 
 export default function InterviewSetupPage() {
   const router = useRouter();
-
 
   // Session storage is automatically cleared by browser on page refresh
   // No need for manual clearing that causes refresh loops
@@ -37,9 +36,11 @@ export default function InterviewSetupPage() {
   };
 
   return (
-    <main className="interview-app-container">
-      <ThemeToggle />
-      <InterviewSetupForm onStartInterview={handleStartInterview} />
-    </main>
+    <>
+      <Navbar />
+      <main className="min-h-screen pt-16">
+        <InterviewSetupForm onStartInterview={handleStartInterview} />
+      </main>
+    </>
   );
 }

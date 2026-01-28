@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { InterviewReportSummary } from "@/components/interview-report";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { Navbar } from "@/components/navbar";
 import { Spinner } from "@/components/ui/spinner";
 import type { InterviewEvaluationResults } from "@/components/interview-session";
 
@@ -106,23 +106,23 @@ export default function InterviewReportPage() {
 
   if (isLoading) {
     return (
-      <main className="interview-app-container">
-        <ThemeToggle />
-        <div className="min-h-screen flex items-center justify-center">
+      <>
+        <Navbar />
+        <main className="min-h-screen flex items-center justify-center pt-14">
           <div className="flex flex-col items-center gap-4">
             <Spinner className="h-8 w-8" />
             <p className="text-muted-foreground">Loading your report...</p>
           </div>
-        </div>
-      </main>
+        </main>
+      </>
     );
   }
 
   if (error && !finalReport) {
     return (
-      <main className="interview-app-container">
-        <ThemeToggle />
-        <div className="min-h-screen flex items-center justify-center">
+      <>
+        <Navbar />
+        <main className="min-h-screen flex items-center justify-center pt-14">
           <div className="text-center">
             <p className="text-destructive mb-4">{error}</p>
             <button
@@ -132,8 +132,8 @@ export default function InterviewReportPage() {
               Start New Interview
             </button>
           </div>
-        </div>
-      </main>
+        </main>
+      </>
     );
   }
 
@@ -142,13 +142,13 @@ export default function InterviewReportPage() {
   }
 
   return (
-    <main className="interview-app-container">
-      <ThemeToggle />
+    <>
+      <Navbar />
       <InterviewReportSummary
         evaluationResults={finalReport}
         onRestartInterview={handleRestartInterview}
         audioSummary={audioSummary}
       />
-    </main>
+    </>
   );
 }

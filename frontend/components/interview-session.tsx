@@ -484,67 +484,72 @@ export function InterviewSessionPanel({
   };
 
   return (
-    <div className="min-h-screen page-gradient-bg p-4 lg:p-6">
-      <div className="max-w-6xl mx-auto animate-fade-in">
+    <div className="min-h-screen page-gradient-bg p-4 lg:p-6 pt-14">
+      <div className="max-w-7xl mx-auto animate-fade-up">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Panel - AI Interviewer */}
-          <div className="lg:col-span-2 flex flex-col gap-4">
-            <Card className="ai-interviewer-card shadow-lg border-border/50 bg-card/95 backdrop-blur-sm border-l-4 border-l-primary">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
+          <div className="lg:col-span-2 flex flex-col gap-5">
+            <Card className="ai-interviewer-card elevation-3 border-border/30 glass-card border-l-4 border-l-primary transition-all duration-300">
+              <CardHeader className="pb-5">
+                <div className="flex items-center justify-between flex-wrap gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Bot className="h-5 w-5 text-primary" />
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center ring-2 ring-primary/10 transition-all duration-300 animate-subtle-pulse">
+                      <Bot className="h-6 w-6 text-primary" />
                     </div>
-                    <CardTitle className="text-lg font-semibold text-foreground">
-                      AI Interviewer
-                    </CardTitle>
+                    <div>
+                      <CardTitle className="text-xl font-bold text-foreground">
+                        AI Interviewer
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground mt-0.5">Powered by Gemini 2.0</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge
                       variant="outline"
-                      className="adaptive-questioning-badge text-xs font-medium border-primary/50 text-primary bg-primary/5 glow-effect"
+                      className="adaptive-questioning-badge text-xs font-semibold border-primary/40 text-primary bg-primary/10 px-3 py-1 transition-all duration-200 hover:bg-primary/15"
                     >
-                      <Sparkles className="h-3 w-3 mr-1" />
-                      Adaptive Questioning
+                      <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                      Adaptive AI
                     </Badge>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowRestartDialog(true)}
-                      className="text-xs text-muted-foreground hover:text-foreground"
+                      className="text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
                     >
-                      <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                      <RotateCcw className="h-4 w-4 mr-1.5" />
                       Restart
                     </Button>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="current-question-display bg-muted/30 rounded-lg p-5 border border-border/50">
-                  <p className="text-foreground text-lg leading-relaxed font-medium">
+              <CardContent className="flex flex-col gap-5">
+                <div className="current-question-display bg-gradient-to-br from-muted/30 to-muted/20 rounded-xl p-6 border border-border/40 shadow-sm transition-all duration-300 hover:border-border/60">
+                  <p className="text-foreground text-xl leading-relaxed font-medium">
                     {currentQuestion}
                   </p>
                 </div>
 
                 {elaborationMessage && (
-                  <div className="p-3 bg-primary/10 border border-primary/20 rounded-md animate-fade-in flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-primary shrink-0" />
-                    <p className="text-sm text-primary font-medium">{elaborationMessage}</p>
+                  <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg animate-scale-in flex items-center gap-3 shadow-sm">
+                    <div className="p-2 rounded-lg bg-primary/20">
+                      <Sparkles className="h-4 w-4 text-primary shrink-0" />
+                    </div>
+                    <p className="text-sm text-primary font-semibold">{elaborationMessage}</p>
                   </div>
                 )}
 
-                <div className="interview-progress-tracker flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground">
-                    Question Progress
+                <div className="interview-progress-tracker flex items-center gap-4 p-4 bg-muted/20 rounded-lg border border-border/30">
+                  <span className="text-sm font-semibold text-foreground">
+                    Progress
                   </span>
                   <div className="flex-1 relative">
                     <Progress
                       value={interviewProgress}
-                      className="h-2 bg-muted/50"
+                      className="h-2.5 bg-muted"
                     />
                   </div>
-                  <span className="text-sm font-medium text-primary">
+                  <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
                     {currentStep} / {totalSteps}
                   </span>
                 </div>
@@ -552,16 +557,19 @@ export function InterviewSessionPanel({
             </Card>
 
             {/* Answer Input Card */}
-            <Card className="candidate-answer-card shadow-lg border-border/50 bg-card/95 backdrop-blur-sm">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
+            <Card className="candidate-answer-card elevation-3 border-border/30 glass-card transition-all duration-300">
+              <CardHeader className="pb-5">
+                <div className="flex items-center justify-between flex-wrap gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
-                      <User className="h-5 w-5 text-secondary-foreground" />
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/40 to-secondary/20 flex items-center justify-center ring-2 ring-secondary/20">
+                      <User className="h-6 w-6 text-foreground" />
                     </div>
-                    <CardTitle className="text-lg font-semibold text-foreground">
-                      Your Answer
-                    </CardTitle>
+                    <div>
+                      <CardTitle className="text-xl font-bold text-foreground">
+                        Your Response
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground mt-0.5">Take your time to answer</p>
+                    </div>
                   </div>
                   {/* Audio playback control for question */}
                   {isAudioModeEnabled && (
@@ -605,10 +613,10 @@ export function InterviewSessionPanel({
                 )}
 
                 <Textarea
-                  placeholder={isAudioModeEnabled && isRecording ? "Recording your answer..." : "Type your answer here..."}
+                  placeholder={isAudioModeEnabled && isRecording ? "🎤 Recording your answer..." : "Type your detailed answer here..."}
                   value={candidateAnswer}
                   onChange={(e) => setCandidateAnswer(e.target.value)}
-                  className="answer-input-field min-h-[150px] resize-none bg-muted/20 border-border/50 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:bg-card"
+                  className="answer-input-field min-h-[160px] text-base resize-none bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary focus:bg-background focus:shadow-sm hover:border-border"
                   disabled={isEvaluatingResponse || isRecording}
                 />
 
@@ -655,23 +663,29 @@ export function InterviewSessionPanel({
                     <Button
                       onClick={handleSubmitAnswer}
                       disabled={isEvaluatingResponse || !candidateAnswer.trim() || isRecording}
-                      className="submit-answer-button font-medium bg-primary text-primary-foreground hover:scale-[1.02] glow-effect transition-all duration-200"
+                      className="submit-answer-button font-semibold bg-primary text-primary-foreground hover:scale-[1.02] elevation-2 glow-effect transition-all duration-200 px-6"
+                      size="lg"
                     >
                       {isEvaluatingResponse ? (
                         <span className="flex items-center gap-2">
                           <Spinner className="h-4 w-4" />
-                          Evaluating...
+                          Analyzing...
                         </span>
                       ) : (
-                        "Submit Answer"
+                        <span className="flex items-center gap-2">
+                          Submit Answer
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </span>
                       )}
                     </Button>
                   </div>
                 </div>
                 {isEvaluatingResponse && (
-                  <div className="evaluation-status flex items-center justify-center gap-2 text-primary text-sm py-2">
+                  <div className="evaluation-status flex items-center justify-center gap-3 text-primary text-sm py-3 px-4 bg-primary/5 rounded-lg border border-primary/20 animate-pulse">
                     <Spinner className="h-4 w-4" />
-                    AI is evaluating your response...
+                    <span className="font-medium">AI is carefully evaluating your response...</span>
                   </div>
                 )}
               </CardContent>
@@ -679,38 +693,40 @@ export function InterviewSessionPanel({
 
             {/* Real-Time Evaluation Display */}
             {lastEvaluation && (
-              <Card className="evaluation-card shadow-lg border-l-4 border-l-success bg-card/95 backdrop-blur-sm animate-fade-in">
-                <CardContent className="pt-4 pb-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-5 w-5 text-success" />
-                      <h3 className="text-sm font-semibold text-foreground">Answer Evaluated</h3>
+              <Card className="evaluation-card elevation-3 border-l-4 border-l-success glass-card animate-scale-in">
+                <CardContent className="pt-5 pb-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-success/10">
+                        <CheckCircle2 className="h-5 w-5 text-success" />
+                      </div>
+                      <h3 className="text-base font-bold text-foreground">Answer Evaluated</h3>
                     </div>
                     <Badge
                       variant={lastEvaluation.score >= 75 ? "default" : lastEvaluation.score >= 50 ? "secondary" : "destructive"}
-                      className="text-base px-3 py-1"
+                      className="text-lg font-bold px-4 py-1.5"
                     >
-                      {lastEvaluation.score}/100
+                      {lastEvaluation.score}<span className="text-sm">/100</span>
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">{lastEvaluation.feedback}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">{lastEvaluation.feedback}</p>
                   {lastEvaluation.breakdown && (
-                    <div className="grid grid-cols-2 gap-2 mt-3">
+                    <div className="grid grid-cols-2 gap-3 mt-4 p-3 bg-muted/20 rounded-lg border border-border/30">
                       <div className="flex items-center gap-2">
-                        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Completeness: {lastEvaluation.breakdown.completeness}</span>
+                        <TrendingUp className="h-4 w-4 text-primary" />
+                        <span className="text-xs font-medium text-foreground">Completeness: <span className="text-primary">{lastEvaluation.breakdown.completeness}</span></span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Accuracy: {lastEvaluation.breakdown.technicalAccuracy}</span>
+                        <TrendingUp className="h-4 w-4 text-primary" />
+                        <span className="text-xs font-medium text-foreground">Accuracy: <span className="text-primary">{lastEvaluation.breakdown.technicalAccuracy}</span></span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Depth: {lastEvaluation.breakdown.depth}</span>
+                        <TrendingUp className="h-4 w-4 text-primary" />
+                        <span className="text-xs font-medium text-foreground">Depth: <span className="text-primary">{lastEvaluation.breakdown.depth}</span></span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Clarity: {lastEvaluation.breakdown.clarity}</span>
+                        <TrendingUp className="h-4 w-4 text-primary" />
+                        <span className="text-xs font-medium text-foreground">Clarity: <span className="text-primary">{lastEvaluation.breakdown.clarity}</span></span>
                       </div>
                     </div>
                   )}
@@ -722,14 +738,19 @@ export function InterviewSessionPanel({
           {/* Side Panel - Interview Memory */}
           <div className="lg:col-span-1">
             <Collapsible open={isMemoryPanelOpen} onOpenChange={setIsMemoryPanelOpen}>
-              <Card className="interview-memory-panel shadow-lg border-border/50 bg-card/95 backdrop-blur-sm">
+              <Card className="interview-memory-panel elevation-2 border-border/30 glass-card">
                 <CardHeader className="pb-3">
                   <CollapsibleTrigger className="w-full">
                     <div className="flex items-center justify-between cursor-pointer group">
-                      <CardTitle className="text-lg font-semibold text-foreground">
-                        Interview Memory
-                      </CardTitle>
-                      <div className="text-muted-foreground group-hover:text-foreground transition-colors">
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-lg font-bold text-foreground">
+                          Interview History
+                        </CardTitle>
+                        <Badge variant="secondary" className="text-xs">
+                          {questionAnswerHistory.length}
+                        </Badge>
+                      </div>
+                      <div className="text-muted-foreground group-hover:text-primary transition-all duration-200 group-hover:scale-110">
                         {isMemoryPanelOpen ? (
                           <ChevronUp className="h-5 w-5 transition-transform" />
                         ) : (
@@ -742,25 +763,32 @@ export function InterviewSessionPanel({
                 <CollapsibleContent className="animate-fade-in">
                   <CardContent className="pt-0">
                     {questionAnswerHistory.length === 0 ? (
-                      <p className="text-muted-foreground text-sm">
-                        Previous questions and answers will appear here as you
-                        progress through the interview.
-                      </p>
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                          Your interview history will appear here as you progress.
+                          Answer questions to build your track record.
+                        </p>
+                      </div>
                     ) : (
                       <div className="memory-items-list flex flex-col gap-3">
                         {questionAnswerHistory.map((item, index) => (
                           <div key={index} className="memory-item">
                             {index > 0 && <Separator className="mb-3" />}
-                            <div className="flex flex-col gap-1">
-                              <div className="flex items-center justify-between">
-                                <p className="text-xs font-medium text-primary">
+                            <div className="flex flex-col gap-2 p-3 rounded-lg bg-muted/20 border border-border/30 hover:border-border/50 hover:bg-muted/30 transition-all duration-200">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="secondary" className="text-xs font-bold bg-primary/10 text-primary">
                                   Q{index + 1}
-                                </p>
+                                </Badge>
+                                {item.score && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {item.score}/100
+                                  </Badge>
+                                )}
                               </div>
-                              <p className="text-sm text-foreground font-medium line-clamp-2">
+                              <p className="text-sm text-foreground font-semibold line-clamp-2">
                                 {item.question}
                               </p>
-                              <p className="text-sm text-muted-foreground mt-1">
+                              <p className="text-xs text-muted-foreground line-clamp-2">
                                 {item.summary}
                               </p>
                             </div>
@@ -774,30 +802,31 @@ export function InterviewSessionPanel({
             </Collapsible>
 
             {/* Interview Configuration Info */}
-            <Card className="interview-config-panel shadow-lg border-border/50 bg-card/95 backdrop-blur-sm mt-4">
-              <CardContent className="pt-4">
-                <div className="config-details flex flex-col gap-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Type</span>
-                    <span className="font-medium text-foreground capitalize">
+            <Card className="interview-config-panel elevation-2 border-border/30 glass-card mt-4">
+              <CardContent className="pt-5 pb-5">
+                <h3 className="text-sm font-bold text-foreground mb-3">Interview Details</h3>
+                <div className="config-details flex flex-col gap-3 text-sm">
+                  <div className="flex justify-between items-center p-2 rounded bg-muted/20">
+                    <span className="text-muted-foreground font-medium">Type</span>
+                    <Badge variant="outline" className="font-semibold capitalize">
                       {interviewConfig.interviewType}
-                    </span>
+                    </Badge>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Role</span>
-                    <span className="font-medium text-foreground">
+                  <div className="flex justify-between items-center p-2 rounded bg-muted/20">
+                    <span className="text-muted-foreground font-medium">Role</span>
+                    <span className="font-semibold text-foreground text-right">
                       {interviewConfig.role || "Not specified"}
                     </span>
                   </div>
                   {interviewConfig.skills && interviewConfig.skills.length > 0 && (
-                    <div className="flex flex-col gap-1 mt-1">
-                      <span className="text-muted-foreground">Skills</span>
-                      <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-col gap-2 p-2 rounded bg-muted/20">
+                      <span className="text-muted-foreground font-medium">Skills ({interviewConfig.skills.length})</span>
+                      <div className="flex flex-wrap gap-1.5">
                         {interviewConfig.skills.map((skill) => (
                           <Badge
                             key={skill}
                             variant="secondary"
-                            className="text-xs bg-primary/10 text-primary border-primary/20"
+                            className="text-xs bg-primary/10 text-primary border border-primary/20"
                           >
                             {skill}
                           </Badge>

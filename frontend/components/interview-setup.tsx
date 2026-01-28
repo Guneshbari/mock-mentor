@@ -185,47 +185,49 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
   const SelectedIcon = interviewTypeIcons[selectedInterviewType];
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 page-gradient-bg">
-      <Card className="interview-setup-card w-full max-w-xl shadow-xl border-border/50 bg-card/95 backdrop-blur-sm animate-fade-in">
-        <CardHeader className="text-center pb-6">
-          <div className="flex justify-center mb-4">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-              <SelectedIcon className="h-7 w-7 text-primary" />
+    <div className="min-h-screen flex items-center justify-center p-4 py-20 page-gradient-bg">
+      <Card className="interview-setup-card w-full max-w-2xl elevation-3 border-border/30 bg-card/95 backdrop-blur-sm animate-fade-up">
+        <CardHeader className="text-center pb-8 space-y-4">
+          <div className="flex justify-center mb-2 animate-scale-in">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center ring-2 ring-primary/10 transition-all duration-300 hover:scale-110 hover:ring-primary/30">
+              <SelectedIcon className="h-8 w-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-semibold text-foreground tracking-tight text-balance">
-            Composable AI Mock Interviewer
-          </CardTitle>
-          <p className="text-muted-foreground text-sm mt-2">
-            Prepare for your next interview with AI-powered practice sessions
-          </p>
+          <div className="space-y-2">
+            <CardTitle className="text-3xl font-bold text-foreground tracking-tight">
+              Mock Mentor AI
+            </CardTitle>
+            <p className="text-muted-foreground text-base max-w-md mx-auto leading-relaxed">
+              Practice interviews with intelligent AI feedback and adaptive questioning
+            </p>
+          </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
           {/* Candidate Name */}
-          <div className="candidate-name-input flex flex-col gap-2">
-            <Label htmlFor="candidate-name" className="text-sm font-medium text-foreground">
-              Your Name <span className="text-destructive">*</span>
+          <div className="candidate-name-input flex flex-col gap-2.5">
+            <Label htmlFor="candidate-name" className="text-sm font-semibold text-foreground">
+              Your Name <span className="text-destructive text-base">*</span>
             </Label>
             <Input
               id="candidate-name"
-              placeholder="e.g. John Doe"
+              placeholder="Enter your full name"
               value={candidateName}
               onChange={(e) => setCandidateName(e.target.value)}
-              className="bg-secondary/30 border-border/50 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:bg-card"
+              className="h-11 bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary focus:bg-background focus:shadow-sm hover:border-border"
             />
           </div>
 
           {/* Candidate Gender */}
-          <div className="candidate-gender-selector flex flex-col gap-2">
-            <Label htmlFor="candidate-gender" className="text-sm font-medium text-foreground">
+          <div className="candidate-gender-selector flex flex-col gap-2.5">
+            <Label htmlFor="candidate-gender" className="text-sm font-semibold text-foreground">
               Gender
             </Label>
             <Select value={candidateGender} onValueChange={(value: any) => setCandidateGender(value)}>
               <SelectTrigger
                 id="candidate-gender"
-                className="bg-secondary/30 border-border/50 transition-all duration-200 focus:ring-2 focus:ring-primary/50"
+                className="h-11 bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 hover:border-border"
               >
-                <SelectValue placeholder="Select gender" />
+                <SelectValue placeholder="Select your gender" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="male">Male</SelectItem>
@@ -237,9 +239,9 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
           </div>
 
           {/* Interview Type Selection */}
-          <div className="interview-type-selector flex flex-col gap-2">
-            <Label className="text-sm font-medium text-foreground">
-              Interview Type
+          <div className="interview-type-selector flex flex-col gap-2.5">
+            <Label className="text-sm font-semibold text-foreground">
+              Interview Type <span className="text-destructive text-base">*</span>
             </Label>
             <Tabs
               value={selectedInterviewType}
@@ -248,26 +250,26 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
               }
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-3 bg-muted/50">
+              <TabsList className="grid w-full grid-cols-3 bg-muted/40 p-1 h-auto gap-1">
                 <TabsTrigger
                   value="hr"
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all duration-200"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-200 hover:bg-muted data-[state=active]:scale-[1.02] py-2.5"
                 >
-                  <Users className="h-4 w-4 mr-1.5" />
+                  <Users className="h-4 w-4 mr-2" />
                   HR
                 </TabsTrigger>
                 <TabsTrigger
                   value="technical"
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all duration-200"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-200 hover:bg-muted data-[state=active]:scale-[1.02] py-2.5"
                 >
-                  <Code className="h-4 w-4 mr-1.5" />
+                  <Code className="h-4 w-4 mr-2" />
                   Technical
                 </TabsTrigger>
                 <TabsTrigger
                   value="behavioral"
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all duration-200"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-200 hover:bg-muted data-[state=active]:scale-[1.02] py-2.5"
                 >
-                  <Briefcase className="h-4 w-4 mr-1.5" />
+                  <Briefcase className="h-4 w-4 mr-2" />
                   Behavioral
                 </TabsTrigger>
               </TabsList>
@@ -275,16 +277,16 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
           </div>
 
           {/* Job Role Input */}
-          <div className="job-role-input flex flex-col gap-2">
-            <Label htmlFor="target-job-role" className="text-sm font-medium text-foreground">
-              Job Role <span className="text-destructive">*</span>
+          <div className="job-role-input flex flex-col gap-2.5">
+            <Label htmlFor="target-job-role" className="text-sm font-semibold text-foreground">
+              Target Role <span className="text-destructive text-base">*</span>
             </Label>
             <Select value={role} onValueChange={setRole}>
               <SelectTrigger
                 id="target-job-role"
-                className="bg-secondary/30 border-border/50 transition-all duration-200 focus:ring-2 focus:ring-primary/50"
+                className="h-11 bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 hover:border-border"
               >
-                <SelectValue placeholder="Select a job role" />
+                <SelectValue placeholder="Choose your target role" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Frontend Developer">Frontend Developer</SelectItem>
@@ -306,34 +308,35 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
           </div>
 
           {/* Skills Input */}
-          <div className="skills-input flex flex-col gap-2">
-            <Label htmlFor="candidate-skills" className="text-sm font-medium text-foreground">
-              Skills <span className="text-destructive">*</span>
+          <div className="skills-input flex flex-col gap-2.5">
+            <Label htmlFor="candidate-skills" className="text-sm font-semibold text-foreground">
+              Skills <span className="text-destructive text-base">*</span>
             </Label>
             <Input
               id="candidate-skills"
-              placeholder="Type a skill and press Enter (e.g. React, JavaScript, SQL)"
+              placeholder="Type a skill and press Enter (e.g. React, TypeScript, Node.js)"
               value={skillInputValue}
               onChange={(e) => setSkillInputValue(e.target.value)}
               onKeyDown={handleAddSkill}
-              className="bg-secondary/30 border-border/50 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:bg-card"
+              className="h-11 bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary focus:bg-background focus:shadow-sm hover:border-border"
             />
             {skills.length > 0 && (
-              <div className="skill-badges-container flex flex-wrap gap-2 mt-2">
-                {skills.map((skill) => (
+              <div className="skill-badges-container flex flex-wrap gap-2 mt-1">
+                {skills.map((skill, index) => (
                   <Badge
                     key={skill}
                     variant="secondary"
-                    className="skill-badge px-3 py-1 text-sm flex items-center gap-1 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-all duration-200"
+                    className="skill-badge px-3 py-1.5 text-sm flex items-center gap-1.5 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 hover:scale-105 hover:shadow-sm transition-all duration-200 animate-scale-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
                     {skill}
                     <button
                       type="button"
                       onClick={() => handleRemoveSkill(skill)}
-                      className="ml-1 hover:text-destructive transition-colors"
+                      className="ml-0.5 hover:text-destructive hover:scale-110 transition-all duration-150"
                       aria-label={`Remove ${skill}`}
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   </Badge>
                 ))}
@@ -342,53 +345,60 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
           </div>
 
           {/* Resume Input */}
-          <div className="resume-input flex flex-col gap-2">
-            <Label htmlFor="resume-content" className="text-sm font-medium text-foreground">
-              Resume / Background <span className="text-destructive">*</span>
+          <div className="resume-input flex flex-col gap-2.5">
+            <Label htmlFor="resume-content" className="text-sm font-semibold text-foreground">
+              Resume / Background <span className="text-destructive text-base">*</span>
             </Label>
             <Textarea
               id="resume-content"
-              placeholder="Paste resume or experience summary"
+              placeholder="Paste your resume or provide a brief summary of your experience and background..."
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
-              className="min-h-[100px] resize-none bg-secondary/30 border-border/50 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:bg-card"
+              className="min-h-[120px] resize-none bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary focus:bg-background focus:shadow-sm hover:border-border"
             />
           </div>
 
           {/* Experience Preset */}
-          <div className="experience-preset-selector flex flex-col gap-2">
-            <Label htmlFor="experience-preset" className="text-sm font-medium text-foreground">
-              Experience Level <span className="text-destructive">*</span>
+          <div className="experience-preset-selector flex flex-col gap-2.5">
+            <Label htmlFor="experience-preset" className="text-sm font-semibold text-foreground">
+              Experience Level <span className="text-destructive text-base">*</span>
             </Label>
             <Select value={experiencePreset} onValueChange={setExperiencePreset}>
               <SelectTrigger
                 id="experience-preset"
-                className="bg-secondary/30 border-border/50 transition-all duration-200 focus:ring-2 focus:ring-primary/50"
+                className="h-11 bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 hover:border-border"
               >
-                <SelectValue placeholder="Select a preset" />
+                <SelectValue placeholder="Select your experience level" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="junior">Junior Developer</SelectItem>
-                <SelectItem value="senior">Senior Developer</SelectItem>
-                <SelectItem value="fresh">Fresh Graduate</SelectItem>
+                <SelectItem value="fresh">Fresh Graduate / Entry Level</SelectItem>
+                <SelectItem value="junior">Junior (1-3 years)</SelectItem>
+                <SelectItem value="senior">Senior (3+ years)</SelectItem>
               </SelectContent>
             </Select>
             {formError && (
-              <p className="text-xs text-destructive mt-1">{formError}</p>
+              <p className="text-sm text-destructive mt-1 animate-shake flex items-center gap-1">
+                <span className="inline-block w-1 h-1 rounded-full bg-destructive"></span>
+                {formError}
+              </p>
             )}
           </div>
 
           {/* Audio Mode Toggle */}
-          <div className="audio-mode-toggle flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+          <div className="audio-mode-toggle p-4 rounded-lg bg-muted/20 border border-border/40 transition-all duration-200 hover:border-border/60">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2.5">
                 {audioMode ? (
-                  <Mic className="h-4 w-4 text-primary" />
+                  <div className="p-1.5 rounded-lg bg-primary/10">
+                    <Mic className="h-4 w-4 text-primary" />
+                  </div>
                 ) : (
-                  <MicOff className="h-4 w-4 text-muted-foreground" />
+                  <div className="p-1.5 rounded-lg bg-muted">
+                    <MicOff className="h-4 w-4 text-muted-foreground" />
+                  </div>
                 )}
-                <Label htmlFor="audio-mode" className="text-sm font-medium text-foreground">
-                  Audio Mode
+                <Label htmlFor="audio-mode" className="text-sm font-semibold text-foreground cursor-pointer">
+                  Voice Interview Mode
                 </Label>
               </div>
               <Switch
@@ -397,14 +407,15 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
                 onCheckedChange={handleAudioModeToggle}
               />
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               {audioMode
-                ? "Questions will be spoken aloud. You can answer with voice or text."
-                : "Enable to hear questions and respond with voice."}
+                ? "✓ Questions will be spoken aloud. You can answer using voice or text."
+                : "Enable to hear questions read aloud and respond with your voice."}
             </p>
             {micPermissionStatus === 'denied' && (
-              <p className="text-xs text-destructive">
-                Microphone access denied. Please allow microphone access in your browser settings.
+              <p className="text-xs text-destructive mt-2 flex items-center gap-1 animate-shake">
+                <span className="inline-block w-1 h-1 rounded-full bg-destructive"></span>
+                Microphone access denied. Please enable it in your browser settings.
               </p>
             )}
           </div>
@@ -412,10 +423,15 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
           {/* Start Button */}
           <Button
             onClick={handleStartInterview}
-            className="start-interview-button w-full mt-2 font-medium bg-primary text-primary-foreground hover:scale-[1.02] hover:shadow-lg glow-effect transition-all duration-200"
+            className="start-interview-button w-full mt-4 h-12 font-semibold text-base bg-primary text-primary-foreground hover:scale-[1.02] hover:shadow-xl elevation-2 glow-effect transition-all duration-200"
             size="lg"
           >
-            Start Interview
+            <span className="flex items-center gap-2">
+              Start Interview Session
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </span>
           </Button>
         </CardContent>
       </Card>
