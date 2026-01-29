@@ -137,7 +137,7 @@ mock-mentor/
 │   │   │   └── interview.service.js
 │   │   ├── controllers/      # API Route Controllers
 │   │   └── server.js         # Entry Point
-│   ├── .env                  # Secrets (API Keys)
+│   ├── .env                  # Secrets (API Keys) - Located in backend root
 │   └── package.json
 │
 ├── frontend/                 # Next.js Application

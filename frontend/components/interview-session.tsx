@@ -269,6 +269,7 @@ export function InterviewSessionPanel({
   const submitAudioAnswer = async (audioBase64: string) => {
     setIsEvaluatingResponse(true);
     setTranscriptionPreview("Transcribing...");
+    stopSpeaking(); // Stop any ongoing speech when submitting
 
     try {
       const response = await fetch('/api/interview/next', {
@@ -356,6 +357,7 @@ export function InterviewSessionPanel({
     if (!candidateAnswer.trim()) return;
 
     setIsEvaluatingResponse(true);
+    stopSpeaking(); // Stop any ongoing speech when submitting
 
     try {
       const response = await fetch('/api/interview/next', {
@@ -447,6 +449,7 @@ export function InterviewSessionPanel({
 
   // Restart interview handler
   const handleRestartInterview = () => {
+    stopSpeaking();
     window.location.href = '/';
   };
 
@@ -468,6 +471,15 @@ export function InterviewSessionPanel({
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [candidateAnswer, isEvaluatingResponse, isRecording]);
+
+  // Cleanup speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   // Store evaluation from response
   const storeEvaluation = (data: any) => {
