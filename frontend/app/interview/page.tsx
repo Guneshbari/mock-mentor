@@ -70,7 +70,7 @@ export default function InterviewSessionPage() {
     return (
       <>
         <Navbar />
-        <main className="min-h-screen flex items-center justify-center pt-14">
+        <main className="min-h-screen flex items-center justify-center pt-20">
           <p className="text-muted-foreground">Validating session...</p>
         </main>
       </>

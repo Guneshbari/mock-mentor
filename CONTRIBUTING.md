@@ -22,7 +22,7 @@ Thank you for your interest in contributing to Mock Mentor! This document provid
 cd backend
 npm install
 cp .env.example .env
-# Add your GEMINI_API_KEY or GROQ_API_KEY to .env
+# Add your GROQ_API_KEY to .env
 node src/server.js
 ```
 

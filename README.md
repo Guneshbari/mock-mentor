@@ -6,7 +6,7 @@
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.1-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Google Gemini](https://img.shields.io/badge/Google_Gemini-2.0_Flash-blue?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
+[![Groq](https://img.shields.io/badge/Groq-AI-orange?style=for-the-badge&logo=ai&logoColor=white)](https://groq.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
@@ -29,10 +29,10 @@
 - **Roles & Levels**: Customized for Freshers, Mid-level, and Seniors.
 - **Adaptive**: Adjusts difficulty based on your answers.
 
-### ⚡ Powered by Google Gemini AI
-- **Speed**: Fast response times using Gemini 2.0 Flash.
-- **Intelligence**: Advanced reasoning with Gemini's multimodal capabilities.
-- **Flexibility**: Support for multiple AI models with easy configuration.
+### ⚡ Powered by Groq AI
+- **Speed**: Lightning-fast response times using Groq's LPU™.
+- **Intelligence**: Advanced reasoning with Llama 3 models.
+- **Flexibility**: Support for various open-source models via Groq.
 
 ### 📊 Comprehensive Analytics
 - **Real-time Feedback**: Instant scoring after every answer.
@@ -63,19 +63,19 @@ graph TD
     C -->|Generate| D["Question Block"]
     C -->|Score| E["Evaluation Block"]
     C -->|Report| F["Feedback Block"]
-    D -->|"Gemini 2.0 Flash"| G["Google Gemini AI"]
-    E -->|"Gemini 2.0 Flash"| G
+    D -->|"Llama 3 70B"| G["Groq AI"]
+    E -->|"Llama 3 70B"| G
 ```
 
 ### Key Services
 | Service | Responsibility | Model Used |
 |---------|----------------|------------|
 | **RoleBlock** | Define specific focus areas per job role | N/A (Role Strategies) |
-| **QuestionGenerator** | Create adaptive, unique questions | `gemini-2.0-flash-exp` |
-| **EvaluationBlock** | Score answers against rubrics | `gemini-2.0-flash-exp` |
-| **FeedbackBlock** | Compile final detailed report | `gemini-2.0-flash-exp` |
-| **AnswerAnalyzer** | Analyze answer quality and depth | `gemini-2.0-flash-exp` |
-| **QuestionElaboration** | Elaborate on questions for clarity | `gemini-2.0-flash-exp` |
+| **QuestionGenerator** | Create adaptive, unique questions | `llama-3.3-70b-versatile` |
+| **EvaluationBlock** | Score answers against rubrics | `llama-3.3-70b-versatile` |
+| **FeedbackBlock** | Compile final detailed report | `llama-3.3-70b-versatile` |
+| **AnswerAnalyzer** | Analyze answer quality and depth | `llama-3.3-70b-versatile` |
+| **QuestionElaboration** | Elaborate on questions for clarity | `llama-3.3-70b-versatile` |
 
 ---
 
@@ -131,7 +131,7 @@ mock-mentor/
 │   │   │   │   ├── EvaluationBlock.js
 │   │   │   │   ├── AnswerAnalyzer.js
 │   │   │   │   └── FeedbackBlock.js
-│   │   │   ├── GeminiService.js    # Google Gemini Integration
+│   │   │   ├── GroqService.js      # Groq AI Integration
 │   │   │   ├── GroqService.js      # Groq Integration (Optional)
 │   │   │   ├── ai.service.js       # AI Orchestration
 │   │   │   └── interview.service.js
@@ -156,9 +156,8 @@ mock-mentor/
 ### Prerequisites
 - **Node.js** 18.0 or higher
 - **npm** or **yarn**
-- **Google Gemini API Key** or **Groq API Key**
-  - Gemini: Get free key at [Google AI Studio](https://aistudio.google.com/)
-  - Groq (Optional): Get key at [console.groq.com](https://console.groq.com/)
+- **Groq API Key**
+  - Get free key at [console.groq.com](https://console.groq.com/)
 
 ### Installation
 
@@ -175,9 +174,7 @@ mock-mentor/
    
    # Create Environment Configuration
    echo "PORT=8000" > .env
-   # For Google Gemini (Recommended)
-   echo "GEMINI_API_KEY=your_gemini_key_here" >> .env
-   # OR for Groq (Optional - if you prefer Groq)
+   # For Groq AI (Recommended)
    echo "GROQ_API_KEY=your_groq_key_here" >> .env
    ```
 

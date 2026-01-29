@@ -496,7 +496,7 @@ export function InterviewSessionPanel({
   };
 
   return (
-    <div className="min-h-screen page-gradient-bg p-4 lg:p-6 pt-14">
+    <div className="min-h-screen page-gradient-bg p-4 lg:p-6 pt-20">
       <div className="max-w-7xl mx-auto animate-fade-up">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Panel - AI Interviewer */}

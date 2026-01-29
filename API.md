@@ -212,26 +212,26 @@ The backend requires the following environment variables:
 
 ```env
 PORT=8000
-GEMINI_API_KEY=your_google_gemini_api_key    # Required if using Gemini (recommended)
-GROQ_API_KEY=your_groq_api_key              # Optional - alternative to Gemini
+GROQ_API_KEY=your_groq_api_key                # Required for Groq (default)
+GEMINI_API_KEY=your_google_gemini_api_key     # Optional - alternative to Groq
 
 # Optional model configurations
-QUESTION_MODEL=gemini-2.0-flash-exp
-EVALUATION_MODEL=gemini-2.0-flash-exp
-REPORT_MODEL=gemini-2.0-flash-exp
+QUESTION_MODEL=llama-3.3-70b-versatile
+EVALUATION_MODEL=llama-3.3-70b-versatile
+REPORT_MODEL=llama-3.3-70b-versatile
 ```
 
 ---
 
 ## AI Models Used
 
-The backend uses Google Gemini AI by default:
+The backend uses **Groq AI** by default:
 
-- **Question Generation**: `gemini-2.0-flash-exp`
-- **Answer Evaluation**: `gemini-2.0-flash-exp`
-- **Final Report**: `gemini-2.0-flash-exp`
+- **Question Generation**: `llama-3.3-70b-versatile`
+- **Answer Evaluation**: `llama-3.3-70b-versatile`
+- **Final Report**: `llama-3.3-70b-versatile`
 
-You can also use Groq AI as an alternative by providing a `GROQ_API_KEY` instead.
+You can also use Google Gemini AI as an alternative by providing a `GEMINI_API_KEY` instead.
 
 ---
 

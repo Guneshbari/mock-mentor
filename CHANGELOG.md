@@ -5,6 +5,12 @@ All notable changes to Mock Mentor will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### 🐛 Bug Fixes
+- **Fixed Audio Playback**: Resolved an issue where the AI continued reading the previous question after the interview ended.
+- **Backend Configuration**: Fixed `.env` file detection issue by moving it to the project root.
+
 ## [1.1.0] - 2026-01-28
 
 ### 🚀 Major Changes

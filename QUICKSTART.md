@@ -7,7 +7,7 @@ Get Mock Mentor up and running in 5 minutes!
 Before you begin, make sure you have:
 - ✅ **Node.js 18+** installed ([Download](https://nodejs.org/))
 - ✅ **Git** installed ([Download](https://git-scm.com/))
-- ✅ **Google Gemini API Key** ([Get Free Key](https://aistudio.google.com/))
+- ✅ **Groq API Key** ([Get Free Key](https://console.groq.com/))
 
 ---
 
@@ -29,7 +29,7 @@ cd backend
 # Install dependencies
 npm install
 
-# Create environment file
+# Create environment file (creates .env in backend directory)
 cp .env.example .env
 ```
 
@@ -37,14 +37,14 @@ Now edit `.env` and add your API key:
 
 ```env
 PORT=8000
-GEMINI_API_KEY=your_actual_gemini_api_key_here
+GROQ_API_KEY=your_actual_groq_api_key_here
 ```
 
-**Get your Gemini API Key:**
-1. Visit [Google AI Studio](https://aistudio.google.com/)
-2. Click "Get API Key"
+**Get your Groq API Key:**
+1. Visit [Groq Console](https://console.groq.com/)
+2. Click "Create API Key"
 3. Create a new API key
-4. Copy and paste it into your `.env` file
+4. Copy and paste it into your `backend/.env` file
 
 ---
 
@@ -118,7 +118,7 @@ You should see:
 
 ### ❌ Backend won't start
 
-**Problem**: `Error: GEMINI_API_KEY is required`
+**Problem**: `Error: GROQ_API_KEY is required`
 
 **Solution**: Make sure you've added your API key to `backend/.env`
 
@@ -140,21 +140,21 @@ You should see:
 **Problem**: `Error: Invalid API key`
 
 **Solution**:
-1. Verify your Gemini API key at [Google AI Studio](https://aistudio.google.com/)
+1. Verify your Groq API key at [Groq Console](https://console.groq.com/)
 2. Ensure there are no extra spaces in your `.env` file
 3. Try generating a fresh API key
 
 ---
 
-## Alternative: Using Groq Instead
+## Alternative: Using Gemini Instead
 
-If you prefer to use Groq instead of Gemini:
+If you prefer to use Google Gemini instead of Groq:
 
-1. Get a Groq API key from [console.groq.com](https://console.groq.com/)
+1. Get a Gemini API key from [aistudio.google.com](https://aistudio.google.com/)
 2. In `backend/.env`, use:
    ```env
-   GROQ_API_KEY=your_groq_api_key_here
-   # Comment out or remove GEMINI_API_KEY
+   GEMINI_API_KEY=your_gemini_api_key_here
+   # Comment out or remove GROQ_API_KEY
    ```
 3. Restart the backend server
 
