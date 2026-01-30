@@ -4,6 +4,7 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { UserNav } from "@/components/navbar-user-nav";
 
 export function Navbar() {
     const { theme, setTheme } = useTheme();
@@ -57,19 +58,24 @@ export function Navbar() {
                     </div>
 
                     {/* Theme Toggle */}
-                    <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                        className="rounded-md hover:bg-muted"
-                        aria-label="Toggle theme"
-                    >
-                        {theme === "dark" ? (
-                            <Sun className="h-4 w-4" />
-                        ) : (
-                            <Moon className="h-4 w-4" />
-                        )}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                            className="rounded-md hover:bg-muted"
+                            aria-label="Toggle theme"
+                        >
+                            {theme === "dark" ? (
+                                <Sun className="h-4 w-4" />
+                            ) : (
+                                <Moon className="h-4 w-4" />
+                            )}
+                        </Button>
+
+                        {/* User Menu */}
+                        <UserNav />
+                    </div>
                 </div>
             </div>
         </nav>

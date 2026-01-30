@@ -1,46 +1,23 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { InterviewSetupForm, type InterviewConfiguration } from "@/components/interview-setup";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
+import { HeroSection } from "@/components/landing/hero-section";
+import { FeaturesSection } from "@/components/landing/features-section";
+import { PricingSection } from "@/components/landing/pricing-section";
+import { FooterCTA } from "@/components/landing/footer-cta";
 
-export default function InterviewSetupPage() {
-  const router = useRouter();
-
-  // Session storage is automatically cleared by browser on page refresh
-  // No need for manual clearing that causes refresh loops
-
-  const handleStartInterview = (config: InterviewConfiguration & {
-    sessionId: string;
-    firstQuestion: string;
-    totalSteps: number;
-    questionAudio?: { text: string; speechParams: object };
-  }) => {
-    // Store session data in sessionStorage for the interview page
-    sessionStorage.setItem('interviewSession', JSON.stringify({
-      sessionId: config.sessionId,
-      firstQuestion: config.firstQuestion,
-      totalSteps: config.totalSteps,
-      questionAudio: config.questionAudio,
-      interviewConfig: {
-        interviewType: config.interviewType,
-        role: config.role,
-        skills: config.skills,
-        resumeText: config.resumeText,
-        audioMode: config.audioMode,
-      },
-    }));
-
-    // Navigate to interview page
-    router.push('/interview');
-  };
-
+export default function LandingPage() {
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <Navbar />
-      <main className="min-h-screen pt-16">
-        <InterviewSetupForm onStartInterview={handleStartInterview} />
+      <main className="flex-1">
+        <HeroSection />
+        <FeaturesSection />
+        <PricingSection />
+        <FooterCTA />
       </main>
-    </>
+      <Footer />
+    </div>
   );
 }
