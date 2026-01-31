@@ -28,16 +28,7 @@ export function UserNav() {
     }
 
     if (!user) {
-        return (
-            <div className="flex items-center gap-2">
-                <Button variant="ghost" asChild>
-                    <Link href="/login">Log in</Link>
-                </Button>
-                <Button asChild>
-                    <Link href="/signup">Sign up</Link>
-                </Button>
-            </div>
-        );
+        return null;
     }
 
     return (
@@ -60,9 +51,6 @@ export function UserNav() {
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                    <Link href="/dashboard" className="cursor-pointer">Dashboard</Link>
-                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                     <Link href="/settings" className="cursor-pointer">Settings</Link>
                 </DropdownMenuItem>

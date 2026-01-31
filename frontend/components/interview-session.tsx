@@ -496,360 +496,358 @@ export function InterviewSessionPanel({
   };
 
   return (
-    <div className="min-h-screen page-gradient-bg p-4 lg:p-6 pt-20">
-      <div className="max-w-7xl mx-auto animate-fade-up">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Panel - AI Interviewer */}
-          <div className="lg:col-span-2 flex flex-col gap-5">
-            <Card className="ai-interviewer-card elevation-3 border-border/30 glass-card border-l-4 border-l-primary transition-all duration-300">
-              <CardHeader className="pb-5">
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center ring-2 ring-primary/10 transition-all duration-300 animate-subtle-pulse">
-                      <Bot className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl font-bold text-foreground">
-                        AI Interviewer
-                      </CardTitle>
-                      <p className="text-xs text-muted-foreground mt-0.5">Powered by Gemini 2.0</p>
-                    </div>
+    <div className="h-screen page-gradient-bg pt-16 flex flex-col overflow-hidden">
+      <div className="flex-1 w-full max-w-7xl mx-auto p-4 lg:p-6 flex flex-col lg:flex-row gap-6 overflow-hidden animate-fade-up">
+        {/* Main Content Area (Left on Desktop) - Scrollable */}
+        <div className="flex-[2] flex flex-col gap-5 overflow-y-auto pr-1 pb-4 h-full scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
+          <Card className="ai-interviewer-card elevation-3 border-border/30 glass-card border-l-4 border-l-primary transition-all duration-300">
+            <CardHeader className="pb-5">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center ring-2 ring-primary/10 transition-all duration-300 animate-subtle-pulse">
+                    <Bot className="h-6 w-6 text-primary" />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className="adaptive-questioning-badge text-xs font-semibold border-primary/40 text-primary bg-primary/10 px-3 py-1 transition-all duration-200 hover:bg-primary/15"
-                    >
-                      <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                      Adaptive AI
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowRestartDialog(true)}
-                      className="text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
-                    >
-                      <RotateCcw className="h-4 w-4 mr-1.5" />
-                      Restart
-                    </Button>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-foreground">
+                      AI Interviewer
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground mt-0.5">Powered by Gemini 2.0</p>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-5">
-                <div className="current-question-display bg-gradient-to-br from-muted/30 to-muted/20 rounded-xl p-6 border border-border/40 shadow-sm transition-all duration-300 hover:border-border/60">
-                  <p className="text-foreground text-xl leading-relaxed font-medium">
-                    {currentQuestion}
-                  </p>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className="adaptive-questioning-badge text-xs font-semibold border-primary/40 text-primary bg-primary/10 px-3 py-1 transition-all duration-200 hover:bg-primary/15"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                    Adaptive AI
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowRestartDialog(true)}
+                    className="text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-1.5" />
+                    Restart
+                  </Button>
                 </div>
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-5">
+              <div className="current-question-display bg-gradient-to-br from-muted/30 to-muted/20 rounded-xl p-6 border border-border/40 shadow-sm transition-all duration-300 hover:border-border/60">
+                <p className="text-foreground text-xl leading-relaxed font-medium">
+                  {currentQuestion}
+                </p>
+              </div>
 
-                {elaborationMessage && (
-                  <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg animate-scale-in flex items-center gap-3 shadow-sm">
-                    <div className="p-2 rounded-lg bg-primary/20">
-                      <Sparkles className="h-4 w-4 text-primary shrink-0" />
-                    </div>
-                    <p className="text-sm text-primary font-semibold">{elaborationMessage}</p>
+              {elaborationMessage && (
+                <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg animate-scale-in flex items-center gap-3 shadow-sm">
+                  <div className="p-2 rounded-lg bg-primary/20">
+                    <Sparkles className="h-4 w-4 text-primary shrink-0" />
                   </div>
+                  <p className="text-sm text-primary font-semibold">{elaborationMessage}</p>
+                </div>
+              )}
+
+              <div className="interview-progress-tracker flex items-center gap-4 p-4 bg-muted/20 rounded-lg border border-border/30">
+                <span className="text-sm font-semibold text-foreground">
+                  Progress
+                </span>
+                <div className="flex-1 relative">
+                  <Progress
+                    value={interviewProgress}
+                    className="h-2.5 bg-muted"
+                  />
+                </div>
+                <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
+                  {currentStep} / {totalSteps}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Answer Input Card */}
+          <Card className="candidate-answer-card elevation-3 border-border/30 glass-card transition-all duration-300">
+            <CardHeader className="pb-5">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/40 to-secondary/20 flex items-center justify-center ring-2 ring-secondary/20">
+                    <User className="h-6 w-6 text-foreground" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-foreground">
+                      Your Response
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground mt-0.5">Take your time to answer</p>
+                  </div>
+                </div>
+                {/* Audio playback control for question */}
+                {isAudioModeEnabled && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => isSpeaking ? stopSpeaking() : speakQuestion(currentQuestion, questionAudio?.speechParams)}
+                    className="flex items-center gap-1"
+                  >
+                    {isSpeaking ? (
+                      <>
+                        <VolumeX className="h-4 w-4" />
+                        <span className="text-xs">Stop</span>
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="h-4 w-4" />
+                        <span className="text-xs">Repeat Question</span>
+                      </>
+                    )}
+                  </Button>
                 )}
-
-                <div className="interview-progress-tracker flex items-center gap-4 p-4 bg-muted/20 rounded-lg border border-border/30">
-                  <span className="text-sm font-semibold text-foreground">
-                    Progress
-                  </span>
-                  <div className="flex-1 relative">
-                    <Progress
-                      value={interviewProgress}
-                      className="h-2.5 bg-muted"
-                    />
-                  </div>
-                  <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
-                    {currentStep} / {totalSteps}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Answer Input Card */}
-            <Card className="candidate-answer-card elevation-3 border-border/30 glass-card transition-all duration-300">
-              <CardHeader className="pb-5">
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/40 to-secondary/20 flex items-center justify-center ring-2 ring-secondary/20">
-                      <User className="h-6 w-6 text-foreground" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl font-bold text-foreground">
-                        Your Response
-                      </CardTitle>
-                      <p className="text-xs text-muted-foreground mt-0.5">Take your time to answer</p>
-                    </div>
-                  </div>
-                  {/* Audio playback control for question */}
-                  {isAudioModeEnabled && (
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              {/* Audio recording indicator */}
+              {isAudioModeEnabled && (transcriptionPreview || audioError) && (
+                <div className={`p-3 rounded-lg text-sm ${audioError ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
+                  {audioError || transcriptionPreview}
+                  {audioError && (
                     <Button
-                      variant="ghost"
+                      variant="link"
                       size="sm"
-                      onClick={() => isSpeaking ? stopSpeaking() : speakQuestion(currentQuestion, questionAudio?.speechParams)}
-                      className="flex items-center gap-1"
+                      onClick={() => setAudioError(null)}
+                      className="ml-2 text-xs"
                     >
-                      {isSpeaking ? (
-                        <>
-                          <VolumeX className="h-4 w-4" />
-                          <span className="text-xs">Stop</span>
-                        </>
-                      ) : (
-                        <>
-                          <Volume2 className="h-4 w-4" />
-                          <span className="text-xs">Repeat Question</span>
-                        </>
-                      )}
+                      Dismiss
                     </Button>
                   )}
                 </div>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                {/* Audio recording indicator */}
-                {isAudioModeEnabled && (transcriptionPreview || audioError) && (
-                  <div className={`p-3 rounded-lg text-sm ${audioError ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
-                    {audioError || transcriptionPreview}
-                    {audioError && (
-                      <Button
-                        variant="link"
-                        size="sm"
-                        onClick={() => setAudioError(null)}
-                        className="ml-2 text-xs"
-                      >
-                        Dismiss
-                      </Button>
-                    )}
-                  </div>
-                )}
+              )}
 
-                <Textarea
-                  placeholder={isAudioModeEnabled && isRecording ? "🎤 Recording your answer..." : "Type your detailed answer here..."}
-                  value={candidateAnswer}
-                  onChange={(e) => setCandidateAnswer(e.target.value)}
-                  className="answer-input-field min-h-[160px] text-base resize-none bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary focus:bg-background focus:shadow-sm hover:border-border"
-                  disabled={isEvaluatingResponse || isRecording}
-                />
+              <Textarea
+                placeholder={isAudioModeEnabled && isRecording ? "🎤 Recording your answer..." : "Type your detailed answer here..."}
+                value={candidateAnswer}
+                onChange={(e) => setCandidateAnswer(e.target.value)}
+                className="answer-input-field min-h-[160px] text-base resize-none bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary focus:bg-background focus:shadow-sm hover:border-border"
+                disabled={isEvaluatingResponse || isRecording}
+              />
 
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="audio-mode-toggle flex items-center gap-2">
-                    <Switch
-                      id="audio-mode-toggle"
-                      checked={isAudioModeEnabled}
-                      onCheckedChange={setIsAudioModeEnabled}
-                    />
-                    <Label
-                      htmlFor="audio-mode-toggle"
-                      className="text-sm text-muted-foreground flex items-center gap-1 cursor-pointer"
-                    >
-                      <Mic className="h-4 w-4" />
-                      Audio Mode
-                    </Label>
-                  </div>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="audio-mode-toggle flex items-center gap-2">
+                  <Switch
+                    id="audio-mode-toggle"
+                    checked={isAudioModeEnabled}
+                    onCheckedChange={setIsAudioModeEnabled}
+                  />
+                  <Label
+                    htmlFor="audio-mode-toggle"
+                    className="text-sm text-muted-foreground flex items-center gap-1 cursor-pointer"
+                  >
+                    <Mic className="h-4 w-4" />
+                    Audio Mode
+                  </Label>
+                </div>
 
-                  <div className="flex items-center gap-2">
-                    {/* Voice Recording Button */}
-                    {isAudioModeEnabled && (
-                      <Button
-                        onClick={handleRecordingToggle}
-                        disabled={isEvaluatingResponse}
-                        variant={isRecording ? "destructive" : "outline"}
-                        className={`transition-all duration-200 ${isRecording ? 'animate-pulse' : ''}`}
-                      >
-                        {isRecording ? (
-                          <span className="flex items-center gap-2">
-                            <Square className="h-4 w-4" />
-                            Stop Recording
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-2">
-                            <Mic className="h-4 w-4" />
-                            Record Answer
-                          </span>
-                        )}
-                      </Button>
-                    )}
-
-                    {/* Submit Text Answer Button */}
+                <div className="flex items-center gap-2">
+                  {/* Voice Recording Button */}
+                  {isAudioModeEnabled && (
                     <Button
-                      onClick={handleSubmitAnswer}
-                      disabled={isEvaluatingResponse || !candidateAnswer.trim() || isRecording}
-                      className="submit-answer-button font-semibold bg-primary text-primary-foreground hover:scale-[1.02] elevation-2 glow-effect transition-all duration-200 px-6"
-                      size="lg"
+                      onClick={handleRecordingToggle}
+                      disabled={isEvaluatingResponse}
+                      variant={isRecording ? "destructive" : "outline"}
+                      className={`transition-all duration-200 ${isRecording ? 'animate-pulse' : ''}`}
                     >
-                      {isEvaluatingResponse ? (
+                      {isRecording ? (
                         <span className="flex items-center gap-2">
-                          <Spinner className="h-4 w-4" />
-                          Analyzing...
+                          <Square className="h-4 w-4" />
+                          Stop Recording
                         </span>
                       ) : (
                         <span className="flex items-center gap-2">
-                          Submit Answer
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
+                          <Mic className="h-4 w-4" />
+                          Record Answer
                         </span>
                       )}
                     </Button>
-                  </div>
+                  )}
+
+                  {/* Submit Text Answer Button */}
+                  <Button
+                    onClick={handleSubmitAnswer}
+                    disabled={isEvaluatingResponse || !candidateAnswer.trim() || isRecording}
+                    className="submit-answer-button font-semibold bg-primary text-primary-foreground hover:scale-[1.02] elevation-2 glow-effect transition-all duration-200 px-6"
+                    size="lg"
+                  >
+                    {isEvaluatingResponse ? (
+                      <span className="flex items-center gap-2">
+                        <Spinner className="h-4 w-4" />
+                        Analyzing...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        Submit Answer
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </span>
+                    )}
+                  </Button>
                 </div>
-                {isEvaluatingResponse && (
-                  <div className="evaluation-status flex items-center justify-center gap-3 text-primary text-sm py-3 px-4 bg-primary/5 rounded-lg border border-primary/20 animate-pulse">
-                    <Spinner className="h-4 w-4" />
-                    <span className="font-medium">AI is carefully evaluating your response...</span>
+              </div>
+              {isEvaluatingResponse && (
+                <div className="evaluation-status flex items-center justify-center gap-3 text-primary text-sm py-3 px-4 bg-primary/5 rounded-lg border border-primary/20 animate-pulse">
+                  <Spinner className="h-4 w-4" />
+                  <span className="font-medium">AI is carefully evaluating your response...</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Real-Time Evaluation Display */}
+          {lastEvaluation && (
+            <Card className="evaluation-card elevation-3 border-l-4 border-l-success glass-card animate-scale-in">
+              <CardContent className="pt-5 pb-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-success/10">
+                      <CheckCircle2 className="h-5 w-5 text-success" />
+                    </div>
+                    <h3 className="text-base font-bold text-foreground">Answer Evaluated</h3>
+                  </div>
+                  <Badge
+                    variant={lastEvaluation.score >= 75 ? "default" : lastEvaluation.score >= 50 ? "secondary" : "destructive"}
+                    className="text-lg font-bold px-4 py-1.5"
+                  >
+                    {lastEvaluation.score}<span className="text-sm">/100</span>
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-3">{lastEvaluation.feedback}</p>
+                {lastEvaluation.breakdown && (
+                  <div className="grid grid-cols-2 gap-3 mt-4 p-3 bg-muted/20 rounded-lg border border-border/30">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-medium text-foreground">Completeness: <span className="text-primary">{lastEvaluation.breakdown.completeness}</span></span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-medium text-foreground">Accuracy: <span className="text-primary">{lastEvaluation.breakdown.technicalAccuracy}</span></span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-medium text-foreground">Depth: <span className="text-primary">{lastEvaluation.breakdown.depth}</span></span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-medium text-foreground">Clarity: <span className="text-primary">{lastEvaluation.breakdown.clarity}</span></span>
+                    </div>
                   </div>
                 )}
               </CardContent>
             </Card>
+          )}
+        </div>
 
-            {/* Real-Time Evaluation Display */}
-            {lastEvaluation && (
-              <Card className="evaluation-card elevation-3 border-l-4 border-l-success glass-card animate-scale-in">
-                <CardContent className="pt-5 pb-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-success/10">
-                        <CheckCircle2 className="h-5 w-5 text-success" />
-                      </div>
-                      <h3 className="text-base font-bold text-foreground">Answer Evaluated</h3>
+        {/* Side Panel - Interview Memory */}
+        <div className="flex-1 overflow-y-auto pr-1 pb-4 h-full scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
+          <Collapsible open={isMemoryPanelOpen} onOpenChange={setIsMemoryPanelOpen}>
+            <Card className="interview-memory-panel elevation-2 border-border/30 glass-card">
+              <CardHeader className="pb-3">
+                <CollapsibleTrigger className="w-full">
+                  <div className="flex items-center justify-between cursor-pointer group">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg font-bold text-foreground">
+                        Interview History
+                      </CardTitle>
+                      <Badge variant="secondary" className="text-xs">
+                        {questionAnswerHistory.length}
+                      </Badge>
                     </div>
-                    <Badge
-                      variant={lastEvaluation.score >= 75 ? "default" : lastEvaluation.score >= 50 ? "secondary" : "destructive"}
-                      className="text-lg font-bold px-4 py-1.5"
-                    >
-                      {lastEvaluation.score}<span className="text-sm">/100</span>
-                    </Badge>
+                    <div className="text-muted-foreground group-hover:text-primary transition-all duration-200 group-hover:scale-110">
+                      {isMemoryPanelOpen ? (
+                        <ChevronUp className="h-5 w-5 transition-transform" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5 transition-transform" />
+                      )}
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">{lastEvaluation.feedback}</p>
-                  {lastEvaluation.breakdown && (
-                    <div className="grid grid-cols-2 gap-3 mt-4 p-3 bg-muted/20 rounded-lg border border-border/30">
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-primary" />
-                        <span className="text-xs font-medium text-foreground">Completeness: <span className="text-primary">{lastEvaluation.breakdown.completeness}</span></span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-primary" />
-                        <span className="text-xs font-medium text-foreground">Accuracy: <span className="text-primary">{lastEvaluation.breakdown.technicalAccuracy}</span></span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-primary" />
-                        <span className="text-xs font-medium text-foreground">Depth: <span className="text-primary">{lastEvaluation.breakdown.depth}</span></span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-primary" />
-                        <span className="text-xs font-medium text-foreground">Clarity: <span className="text-primary">{lastEvaluation.breakdown.clarity}</span></span>
-                      </div>
+                </CollapsibleTrigger>
+              </CardHeader>
+              <CollapsibleContent className="animate-fade-in">
+                <CardContent className="pt-0">
+                  {questionAnswerHistory.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        Your interview history will appear here as you progress.
+                        Answer questions to build your track record.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="memory-items-list flex flex-col gap-3">
+                      {questionAnswerHistory.map((item, index) => (
+                        <div key={index} className="memory-item">
+                          {index > 0 && <Separator className="mb-3" />}
+                          <div className="flex flex-col gap-2 p-3 rounded-lg bg-muted/20 border border-border/30 hover:border-border/50 hover:bg-muted/30 transition-all duration-200">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="text-xs font-bold bg-primary/10 text-primary">
+                                Q{index + 1}
+                              </Badge>
+                              {item.score && (
+                                <Badge variant="outline" className="text-xs">
+                                  {item.score}/100
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-foreground font-semibold line-clamp-2">
+                              {item.question}
+                            </p>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {item.summary}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Side Panel - Interview Memory */}
-          <div className="lg:col-span-1">
-            <Collapsible open={isMemoryPanelOpen} onOpenChange={setIsMemoryPanelOpen}>
-              <Card className="interview-memory-panel elevation-2 border-border/30 glass-card">
-                <CardHeader className="pb-3">
-                  <CollapsibleTrigger className="w-full">
-                    <div className="flex items-center justify-between cursor-pointer group">
-                      <div className="flex items-center gap-2">
-                        <CardTitle className="text-lg font-bold text-foreground">
-                          Interview History
-                        </CardTitle>
-                        <Badge variant="secondary" className="text-xs">
-                          {questionAnswerHistory.length}
-                        </Badge>
-                      </div>
-                      <div className="text-muted-foreground group-hover:text-primary transition-all duration-200 group-hover:scale-110">
-                        {isMemoryPanelOpen ? (
-                          <ChevronUp className="h-5 w-5 transition-transform" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5 transition-transform" />
-                        )}
-                      </div>
-                    </div>
-                  </CollapsibleTrigger>
-                </CardHeader>
-                <CollapsibleContent className="animate-fade-in">
-                  <CardContent className="pt-0">
-                    {questionAnswerHistory.length === 0 ? (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground text-sm leading-relaxed">
-                          Your interview history will appear here as you progress.
-                          Answer questions to build your track record.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="memory-items-list flex flex-col gap-3">
-                        {questionAnswerHistory.map((item, index) => (
-                          <div key={index} className="memory-item">
-                            {index > 0 && <Separator className="mb-3" />}
-                            <div className="flex flex-col gap-2 p-3 rounded-lg bg-muted/20 border border-border/30 hover:border-border/50 hover:bg-muted/30 transition-all duration-200">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="secondary" className="text-xs font-bold bg-primary/10 text-primary">
-                                  Q{index + 1}
-                                </Badge>
-                                {item.score && (
-                                  <Badge variant="outline" className="text-xs">
-                                    {item.score}/100
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-sm text-foreground font-semibold line-clamp-2">
-                                {item.question}
-                              </p>
-                              <p className="text-xs text-muted-foreground line-clamp-2">
-                                {item.summary}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-
-            {/* Interview Configuration Info */}
-            <Card className="interview-config-panel elevation-2 border-border/30 glass-card mt-4">
-              <CardContent className="pt-5 pb-5">
-                <h3 className="text-sm font-bold text-foreground mb-3">Interview Details</h3>
-                <div className="config-details flex flex-col gap-3 text-sm">
-                  <div className="flex justify-between items-center p-2 rounded bg-muted/20">
-                    <span className="text-muted-foreground font-medium">Type</span>
-                    <Badge variant="outline" className="font-semibold capitalize">
-                      {interviewConfig.interviewType}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-2 rounded bg-muted/20">
-                    <span className="text-muted-foreground font-medium">Role</span>
-                    <span className="font-semibold text-foreground text-right">
-                      {interviewConfig.role || "Not specified"}
-                    </span>
-                  </div>
-                  {interviewConfig.skills && interviewConfig.skills.length > 0 && (
-                    <div className="flex flex-col gap-2 p-2 rounded bg-muted/20">
-                      <span className="text-muted-foreground font-medium">Skills ({interviewConfig.skills.length})</span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {interviewConfig.skills.map((skill) => (
-                          <Badge
-                            key={skill}
-                            variant="secondary"
-                            className="text-xs bg-primary/10 text-primary border border-primary/20"
-                          >
-                            {skill}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
+              </CollapsibleContent>
             </Card>
-          </div>
+          </Collapsible>
+
+          {/* Interview Configuration Info */}
+          <Card className="interview-config-panel elevation-2 border-border/30 glass-card mt-4">
+            <CardContent className="pt-5 pb-5">
+              <h3 className="text-sm font-bold text-foreground mb-3">Interview Details</h3>
+              <div className="config-details flex flex-col gap-3 text-sm">
+                <div className="flex justify-between items-center p-2 rounded bg-muted/20">
+                  <span className="text-muted-foreground font-medium">Type</span>
+                  <Badge variant="outline" className="font-semibold capitalize">
+                    {interviewConfig.interviewType}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center p-2 rounded bg-muted/20">
+                  <span className="text-muted-foreground font-medium">Role</span>
+                  <span className="font-semibold text-foreground text-right">
+                    {interviewConfig.role || "Not specified"}
+                  </span>
+                </div>
+                {interviewConfig.skills && interviewConfig.skills.length > 0 && (
+                  <div className="flex flex-col gap-2 p-2 rounded bg-muted/20">
+                    <span className="text-muted-foreground font-medium">Skills ({interviewConfig.skills.length})</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {interviewConfig.skills.map((skill) => (
+                        <Badge
+                          key={skill}
+                          variant="secondary"
+                          className="text-xs bg-primary/10 text-primary border border-primary/20"
+                        >
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 

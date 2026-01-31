@@ -4,7 +4,6 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { UserNav } from "@/components/navbar-user-nav";
 
 export function Navbar() {
     const { theme, setTheme } = useTheme();
@@ -24,9 +23,9 @@ export function Navbar() {
 
     if (!mounted) {
         return (
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-14">
+            <nav className="fixed top-0 left-0 right-0 z-[1000] bg-background/80 backdrop-blur-md border-b border-border/50">
+                <div className="w-full px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
                         <div className="flex items-center gap-2.5">
                             <div className="text-lg font-bold text-foreground">
                                 Mock Mentor AI
@@ -40,13 +39,13 @@ export function Navbar() {
 
     return (
         <nav
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-background/80 backdrop-blur-md border-b ${scrolled
+            className={`fixed top-0 left-0 right-0 z-[1000] transition-all duration-300 bg-background/80 backdrop-blur-md border-b ${scrolled
                 ? "border-border/50 shadow-sm"
                 : "border-border/20"
                 }`}
         >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-14">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between h-16">
                     {/* Logo / Brand */}
                     <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
@@ -72,9 +71,6 @@ export function Navbar() {
                                 <Moon className="h-4 w-4" />
                             )}
                         </Button>
-
-                        {/* User Menu */}
-                        <UserNav />
                     </div>
                 </div>
             </div>

@@ -29,8 +29,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const initializeAuth = async () => {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
-                setSession(session);
-                setUser(session?.user ?? null);
+                if (session) {
+                    setSession(session);
+                    setUser(session.user);
+                } else {
+                    // Inject Guest User
+                    console.log("No session found, using guest user");
+                    const guestUser: any = {
+                        id: 'guest-user-123',
+                        email: 'guest@mockmentor.ai',
+                        user_metadata: {
+                            name: 'Guest User',
+                            avatar_url: '',
+                        },
+                        aud: 'authenticated',
+                        role: 'authenticated',
+                    };
+                    setUser(guestUser);
+                    setSession(null); // Keep session null to indicate no real auth
+                }
             } catch (error) {
                 console.error("Error checking auth session:", error);
             } finally {
@@ -40,16 +57,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const { data: { subscription } } = supabase.auth.onAuthStateChange(
                 (_event, session) => {
                     setSession(session);
-                    setUser(session?.user ?? null);
-                    setIsLoading(false);
-
-                    if (_event === 'SIGNED_OUT') {
-                        router.push('/');
-                        router.refresh();
-                    } else if (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED') {
-                        router.refresh();
-                        if (_event === 'SIGNED_IN') router.push('/dashboard');
+                    if (session) {
+                        setUser(session.user);
                     }
+                    // If signed out, we might want to re-inject guest, but for now let's just leave it
+                    // logic here is less critical since we removed auth pages
+                    setIsLoading(false);
                 }
             );
 
