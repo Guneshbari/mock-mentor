@@ -77,10 +77,29 @@ class GroqService {
         return await this.groq.audio.transcriptions.create({
             file: fileStream,
             model: 'whisper-large-v3-turbo',
+            prompt: "Technical interview response, software engineering terminology, system design, coding, distinct and clear speech. Context: The user is answering an interview question.",
             response_format: 'text',
             language: 'en',
             temperature: 0.0
         });
+
+        let text = transcription.text.trim();
+
+        // Hallucination filters (common whisper hallucinations on silence)
+        const hallucinations = [
+            "Thank you.", "Thank you", "Thanks.", "Thanks",
+            "You're welcome.", "You're welcome",
+            "Subtitle by", "Amara.org", "Translated by",
+            "Bye.", "Bye",
+            "."
+        ];
+
+        // If the text is exactly one of these (case-insensitive), or very short and non-meaningful, clear it
+        if (hallucinations.some(h => text.toLowerCase() === h.toLowerCase()) || text.length < 2) {
+            return { text: "" };
+        }
+
+        return transcription;
     }
 }
 

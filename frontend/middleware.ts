@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     let response = NextResponse.next({
         request: {
             headers: request.headers,
@@ -54,23 +54,23 @@ export async function proxy(request: NextRequest) {
         }
     )
 
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    // Protected Routes Logic - DISABLED
-    // const protectedPaths = ['/dashboard', '/interview', '/report']
-    // const isProtected = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
+    // Protected Routes Logic
+    const protectedPaths = ['/interview-type', '/interview', '/report']
+    const isProtected = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
-    // Auth Routes Logic - DISABLED
-    // const authPaths = ['/login', '/signup']
-    // const isAuthPage = authPaths.some(path => request.nextUrl.pathname.startsWith(path))
+    // Auth Routes Logic
+    const authPaths = ['/login', '/signup']
+    const isAuthPage = authPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
-    // if (isProtected && !session) {
-    //     return NextResponse.redirect(new URL('/login', request.url))
-    // }
+    if (isProtected && !user) {
+        return NextResponse.redirect(new URL('/login', request.url))
+    }
 
-    // if (isAuthPage && session) {
-    //     return NextResponse.redirect(new URL('/dashboard', request.url))
-    // }
+    if (isAuthPage && user) {
+        return NextResponse.redirect(new URL('/interview-type', request.url))
+    }
 
     return response
 }

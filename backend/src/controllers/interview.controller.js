@@ -70,8 +70,11 @@ async function processNextStep(req, res) {
       const audioResult = await aiService.processAudioAnswer(audioAnswer, mimeType);
 
       if (audioResult.success) {
-        answerText = audioResult.transcribedText;
-        console.log('Audio transcribed successfully:', answerText.substring(0, 100));
+        const transcribed = audioResult.transcribedText;
+        console.log('Audio transcribed successfully:', transcribed.substring(0, 100));
+
+        // Append to existing text if present
+        answerText = answerText ? `${answerText.trim()} ${transcribed}` : transcribed;
       } else if (audioResult.needsRetry) {
         // Return error asking user to retry or type
         return res.status(400).json({

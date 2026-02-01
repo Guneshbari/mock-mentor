@@ -4,14 +4,32 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 
 export function Navbar() {
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [user, setUser] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         setMounted(true);
+        const checkUser = async () => {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+            setLoading(false);
+
+            const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+                setUser(session?.user ?? null);
+            });
+
+            return () => {
+                subscription.unsubscribe();
+            };
+        };
+        checkUser();
 
         const handleScroll = () => {
             setScrolled(window.scrollY > 20);
@@ -47,17 +65,17 @@ export function Navbar() {
             <div className="w-full px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo / Brand */}
-                    <div className="flex items-center gap-2.5">
+                    <a href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
                         <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
                             <span className="text-primary-foreground font-bold text-sm">M</span>
                         </div>
                         <div className="text-lg font-bold text-foreground">
                             Mock Mentor AI
                         </div>
-                    </div>
+                    </a>
 
-                    {/* Theme Toggle */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-4">
+                        {/* Theme Toggle */}
                         <Button
                             variant="ghost"
                             size="icon-sm"
@@ -71,6 +89,41 @@ export function Navbar() {
                                 <Moon className="h-4 w-4" />
                             )}
                         </Button>
+
+                        {/* Auth Buttons */}
+                        {loading ? (
+                            <div className="w-20 h-8 animate-pulse bg-muted rounded" />
+                        ) : user ? (
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium hidden sm:inline-block">
+                                    {user.email?.split('@')[0]}
+                                </span>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={async () => {
+                                        const supabase = createClient();
+                                        await supabase.auth.signOut();
+                                        setUser(null);
+                                        window.location.href = "/";
+                                    }}
+                                >
+                                    Logout
+                                </Button>
+                                <Button asChild size="sm">
+                                    <a href="/interview-type">Dashboard</a>
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <Button asChild variant="ghost" size="sm">
+                                    <a href="/login">Login</a>
+                                </Button>
+                                <Button asChild size="sm">
+                                    <a href="/signup">Sign Up</a>
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

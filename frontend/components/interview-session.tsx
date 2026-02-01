@@ -157,6 +157,9 @@ export function InterviewSessionPanel({
   const startRecording = async () => {
     try {
       setAudioError(null);
+      setAudioError(null);
+      // setCandidateAnswer(""); // REMOVED: Keep existing text when ensuring appending logic
+
 
       // Enhanced audio constraints for noise filtering and voice isolation
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -164,7 +167,6 @@ export function InterviewSessionPanel({
           echoCancellation: true,        // Reduces echo
           noiseSuppression: true,        // Filters background noise
           autoGainControl: true,         // Normalizes volume
-          sampleRate: 16000,             // Sufficient for speech (reduces file size)
           channelCount: 1                // Mono audio (sufficient for voice)
         }
       });
@@ -253,7 +255,11 @@ export function InterviewSessionPanel({
       }
 
       // Display transcribed text in the text box
-      setCandidateAnswer(data.transcribedText);
+      // Display transcribed text in the text box (append if exists)
+      setCandidateAnswer(prev => {
+        const trimmed = prev.trim();
+        return trimmed ? `${trimmed} ${data.transcribedText}` : data.transcribedText;
+      });
       setTranscriptionPreview("");
 
       // Clear any previous errors
@@ -277,7 +283,7 @@ export function InterviewSessionPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: interviewConfig.sessionId,
-          previousAnswerText: '', // Will be transcribed on backend
+          previousAnswerText: candidateAnswer, // Send existing text so backend can append
           audioAnswer: audioBase64,
           audioMimeType: 'audio/webm',
           inputMode: 'audio',
