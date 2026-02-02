@@ -22,10 +22,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Forward Authorization header if present
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    const authHeader = request.headers.get('authorization');
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+
     // Forward request to backend
     const response = await fetch(`${BACKEND_URL}/api/interview/start`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ interviewConfig }),
     });
 

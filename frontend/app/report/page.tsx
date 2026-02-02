@@ -101,7 +101,7 @@ export default function InterviewReportPage() {
     // Clear session data
     sessionStorage.removeItem('interviewSession');
     sessionStorage.removeItem('reportSessionId');
-    router.push('/');
+    router.push('/interview-type');
   };
 
   if (isLoading) {
@@ -144,11 +144,13 @@ export default function InterviewReportPage() {
   return (
     <>
       <Navbar />
-      <InterviewReportSummary
-        evaluationResults={finalReport}
-        onRestartInterview={handleRestartInterview}
-        audioSummary={audioSummary}
-      />
+      <main className="pt-20">
+        <InterviewReportSummary
+          evaluationResults={finalReport}
+          onRestartInterview={handleRestartInterview}
+          audioSummary={audioSummary}
+        />
+      </main>
     </>
   );
 }

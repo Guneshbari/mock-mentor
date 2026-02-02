@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const interviewController = require('../controllers/interview.controller');
+const extractUser = require('../middleware/auth.middleware');
+
+// Apply auth middleware to all routes (optional auth - continues even if not authenticated)
+router.use(extractUser);
 
 // POST /api/interview/start - Initialize interview session
 router.post('/start', interviewController.startInterview);

@@ -278,9 +278,13 @@ export function InterviewSessionPanel({
     stopSpeaking(); // Stop any ongoing speech when submitting
 
     try {
+      // Import auth headers helper
+      const { getAuthHeaders } = await import('@/lib/auth-headers');
+      const headers = await getAuthHeaders();
+
       const response = await fetch('/api/interview/next', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           sessionId: interviewConfig.sessionId,
           previousAnswerText: candidateAnswer, // Send existing text so backend can append
@@ -366,9 +370,13 @@ export function InterviewSessionPanel({
     stopSpeaking(); // Stop any ongoing speech when submitting
 
     try {
+      // Import auth headers helper
+      const { getAuthHeaders } = await import('@/lib/auth-headers');
+      const headers = await getAuthHeaders();
+
       const response = await fetch('/api/interview/next', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           sessionId: interviewConfig.sessionId,
           previousAnswerText: candidateAnswer,
@@ -456,7 +464,8 @@ export function InterviewSessionPanel({
   // Restart interview handler
   const handleRestartInterview = () => {
     stopSpeaking();
-    window.location.href = '/';
+    sessionStorage.removeItem('interviewSession');
+    window.location.href = '/interview-type';
   };
 
   // Keyboard shortcuts
@@ -503,9 +512,9 @@ export function InterviewSessionPanel({
 
   return (
     <div className="h-screen page-gradient-bg pt-16 flex flex-col overflow-hidden">
-      <div className="flex-1 w-full max-w-7xl mx-auto p-4 lg:p-6 flex flex-col lg:flex-row gap-6 overflow-hidden animate-fade-up">
+      <div className="flex-1 w-full max-w-7xl mx-auto p-4 lg:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden animate-fade-up">
         {/* Main Content Area (Left on Desktop) - Scrollable */}
-        <div className="flex-[2] flex flex-col gap-5 overflow-y-auto pr-1 pb-4 h-full scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
+        <div className="flex-[2] flex flex-col gap-4 lg:gap-5 overflow-y-auto pr-1 pb-4 h-full scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
           <Card className="ai-interviewer-card elevation-3 border-border/30 glass-card border-l-4 border-l-primary transition-all duration-300">
             <CardHeader className="pb-5">
               <div className="flex items-center justify-between flex-wrap gap-3">
@@ -520,7 +529,7 @@ export function InterviewSessionPanel({
                     <p className="text-xs text-muted-foreground mt-0.5">Powered by Gemini 2.0</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <Badge
                     variant="outline"
                     className="adaptive-questioning-badge text-xs font-semibold border-primary/40 text-primary bg-primary/10 px-3 py-1 transition-all duration-200 hover:bg-primary/15"
@@ -633,11 +642,11 @@ export function InterviewSessionPanel({
                 placeholder={isAudioModeEnabled && isRecording ? "🎤 Recording your answer..." : "Type your detailed answer here..."}
                 value={candidateAnswer}
                 onChange={(e) => setCandidateAnswer(e.target.value)}
-                className="answer-input-field min-h-[160px] text-base resize-none bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary focus:bg-background focus:shadow-sm hover:border-border"
+                className="answer-input-field min-h-[120px] max-h-[250px] text-base resize-none bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary focus:bg-background focus:shadow-sm hover:border-border"
                 disabled={isEvaluatingResponse || isRecording}
               />
 
-              <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="audio-mode-toggle flex items-center gap-2">
                   <Switch
                     id="audio-mode-toggle"
@@ -653,7 +662,7 @@ export function InterviewSessionPanel({
                   </Label>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {/* Voice Recording Button */}
                   {isAudioModeEnabled && (
                     <Button

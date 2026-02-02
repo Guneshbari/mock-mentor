@@ -30,8 +30,13 @@ async function startInterview(req, res) {
     // Check if audio mode is enabled (optional)
     const audioMode = interviewConfig.audioMode || false;
 
+    // Get userId from auth middleware (may be null if not authenticated)
+    const userId = req.userId || null;
+
+    console.log('User authentication status:', userId ? `Logged in as ${userId}` : 'Not logged in - database operations will be skipped');
+
     // Delegate to service
-    const result = await interviewService.startInterview(interviewConfig);
+    const result = await interviewService.startInterview(interviewConfig, userId);
 
     // If audio mode is enabled, include speech params for the first question
     if (audioMode && result.firstQuestion) {
@@ -89,6 +94,8 @@ async function processNextStep(req, res) {
     if (!answerText || typeof answerText !== 'string' || answerText.trim().length === 0) {
       return res.status(400).json({ error: 'Answer is required. Please provide text or audio input.' });
     }
+
+    console.log('Processing answer for session:', sessionId);
 
     // Delegate to service (backend is server-authoritative, uses session.currentStep)
     const result = await interviewService.processNextStep(

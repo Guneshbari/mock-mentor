@@ -6,14 +6,14 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_U
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { 
-      sessionId, 
-      previousAnswerText, 
+    const {
+      sessionId,
+      previousAnswerText,
       // Audio mode optional fields
       audioAnswer,
       audioMimeType,
       inputMode,
-      audioMode 
+      audioMode
     } = body;
 
     // Validate required fields - either text answer or audio answer required
@@ -41,12 +41,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Forward Authorization header if present
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    const authHeader = request.headers.get('authorization');
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+
     // Forward request to backend (backend uses session.currentStep as single source of truth)
     const response = await fetch(`${BACKEND_URL}/api/interview/next`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         sessionId,
         previousAnswerText: previousAnswerText || '',
@@ -80,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
-    
+
     // Response should contain either nextQuestion OR finalReport, plus currentStep and totalSteps
     // Also include optional audio response data
     return NextResponse.json({

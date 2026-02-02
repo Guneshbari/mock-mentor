@@ -35,7 +35,7 @@ export default function Home() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen pt-16">
+      <main className="min-h-screen pt-16 flex flex-col">
         <InterviewSetupForm onStartInterview={handleStartInterview} />
       </main>
     </>

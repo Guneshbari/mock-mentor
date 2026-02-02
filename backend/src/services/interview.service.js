@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const { getSession, setSession, hasSession } = require('../store/session.store');
 const { TOTAL_QUESTIONS } = require('../utils/constants');
 const aiService = require('./ai.service');
+const databaseService = require('./database.service');
 
 // Dynamic round management - minimum 5, maximum 10
 const MIN_ROUNDS = 5;
@@ -20,9 +21,10 @@ const PLACEHOLDER_QUESTIONS = [
 /**
  * Start a new interview session
  * @param {object} interviewConfig - Interview configuration
+ * @param {string|null} userId - User ID (optional)
  * @returns {Promise<object>} Session initialization result
  */
-async function startInterview(interviewConfig) {
+async function startInterview(interviewConfig, userId = null) {
   // Generate sessionId using crypto.randomUUID
   const sessionId = crypto.randomUUID();
 
@@ -53,14 +55,45 @@ async function startInterview(interviewConfig) {
     totalSteps: Math.max(MIN_ROUNDS, Math.min(MAX_ROUNDS, initialTotalRounds)),
     history: [],
     finalReport: null,
+    questionIds: {}, // Track question IDs from DB
   };
 
   // Get first question using AI (with fallback)
   const firstQuestion = await aiService.generateNextQuestion(interviewState);
   interviewState.lastQuestion = firstQuestion;
 
-  // Store session
+  // Store session in memory
   setSession(sessionId, interviewState);
+
+  // Persist to database (if user is authenticated)
+  if (userId) {
+    try {
+      await databaseService.createSession(userId, interviewConfig, sessionId);
+
+      // Save user preferences (role and interview type)
+      await databaseService.saveUserPreferences(userId, {
+        preferred_role: interviewConfig.role,
+        interview_type: interviewConfig.interviewType,
+        experience_level: interviewConfig.experiencePreset || null,
+      });
+
+      // Save first question to database
+      const questionData = await databaseService.saveQuestion(
+        sessionId,
+        firstQuestion,
+        interviewConfig.interviewType,
+        1
+      );
+
+      // Store question ID for later reference
+      if (questionData) {
+        interviewState.questionIds[1] = questionData.id;
+        setSession(sessionId, interviewState);
+      }
+    } catch (dbError) {
+      console.error('Database save failed, continuing with in-memory only:', dbError);
+    }
+  }
 
   return {
     sessionId,
@@ -129,6 +162,22 @@ async function processNextStep(sessionId, previousAnswerText) {
   // This saves API calls and makes the interview smoother
   console.log(`[Interview] Storing answer ${interviewState.currentStep} without evaluation`);
 
+  // Get question ID for current step (if saved to DB)
+  const currentQuestionId = interviewState.questionIds?.[interviewState.currentStep];
+
+  // Save response to database (if question ID exists)
+  if (currentQuestionId) {
+    try {
+      await databaseService.saveResponse(
+        interviewState.sessionId,
+        currentQuestionId,
+        previousAnswerText
+      );
+    } catch (dbError) {
+      console.error('Failed to save response to database:', dbError);
+    }
+  }
+
   // Add answer to history WITHOUT evaluation
   interviewState.history.push({
     question: currentQuestion,
@@ -144,6 +193,13 @@ async function processNextStep(sessionId, previousAnswerText) {
     // Generate final report with comprehensive evaluation of ALL answers
     if (!interviewState.finalReport) {
       interviewState.finalReport = await aiService.generateFinalReport(interviewState);
+    }
+
+    // Update session status to completed
+    try {
+      await databaseService.updateSessionStatus(interviewState.sessionId, 'completed');
+    } catch (dbError) {
+      console.error('Failed to update session status:', dbError);
     }
 
     // Update session
@@ -164,6 +220,23 @@ async function processNextStep(sessionId, previousAnswerText) {
   // Generate next question using AI (adaptive based on history and interview config)
   const nextQuestion = await aiService.generateNextQuestion(interviewState);
   interviewState.lastQuestion = nextQuestion;
+
+  // Save next question to database
+  try {
+    const questionData = await databaseService.saveQuestion(
+      interviewState.sessionId,
+      nextQuestion,
+      interviewState.interviewConfig.interviewType,
+      interviewState.currentStep
+    );
+
+    // Store question ID
+    if (questionData) {
+      interviewState.questionIds[interviewState.currentStep] = questionData.id;
+    }
+  } catch (dbError) {
+    console.error('Failed to save question to database:', dbError);
+  }
 
   // Update session
   setSession(sessionId, interviewState);

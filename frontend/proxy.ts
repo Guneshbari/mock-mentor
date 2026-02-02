@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     // Check if Supabase environment variables are available
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -68,22 +68,44 @@ export async function middleware(request: NextRequest) {
         }
     )
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser();
 
-    // Protected Routes Logic
-    const protectedPaths = ['/interview-type', '/interview', '/report']
-    const isProtected = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
+    // Public routes that don't require authentication
+    const publicRoutes = ['/login', '/signup', '/'];
+    const isPublicRoute = publicRoutes.includes(request.nextUrl.pathname);
 
-    // Auth Routes Logic
-    const authPaths = ['/login', '/signup']
-    const isAuthPage = authPaths.some(path => request.nextUrl.pathname.startsWith(path))
+    // Onboarding route
+    const isOnboardingRoute = request.nextUrl.pathname === '/onboarding';
 
-    if (isProtected && !user) {
-        return NextResponse.redirect(new URL('/login', request.url))
-    }
+    // If user is logged in
+    if (user) {
+        // Check if user has completed onboarding
+        const onboardingCompleted = user.user_metadata?.onboarding_completed;
 
-    if (isAuthPage && user) {
-        return NextResponse.redirect(new URL('/interview-type', request.url))
+        // If onboarding not completed and not on onboarding page, redirect to onboarding
+        if (!onboardingCompleted && !isOnboardingRoute && !isPublicRoute) {
+            return NextResponse.redirect(new URL('/onboarding', request.url));
+        }
+
+        // If onboarding completed and trying to access onboarding, redirect to interview-type
+        if (onboardingCompleted && isOnboardingRoute) {
+            return NextResponse.redirect(new URL('/interview-type', request.url));
+        }
+
+        // If logged in and trying to access login/signup, redirect to interview-type
+        if (isPublicRoute && request.nextUrl.pathname !== '/') {
+            return NextResponse.redirect(new URL('/interview-type', request.url));
+        }
+    } else {
+        // If not logged in and trying to access protected routes, redirect to login
+        if (!isPublicRoute && !isOnboardingRoute) {
+            return NextResponse.redirect(new URL('/login', request.url));
+        }
+
+        // If not logged in but trying to access onboarding, redirect to login
+        if (isOnboardingRoute) {
+            return NextResponse.redirect(new URL('/login', request.url));
+        }
     }
 
     return response
@@ -91,13 +113,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        /*
-         * Match all request paths except for the ones starting with:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * Feel free to modify this pattern to include more paths.
-         */
         '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 }

@@ -38,11 +38,17 @@ create table public.user_preferences (
   user_id uuid references public.users(id) on delete cascade primary key,
   preferred_role text,
   experience_level text check (experience_level in ('beginner', 'intermediate', 'advanced')),
-  target_company_type text,
-  interview_type text, -- 'technical', 'behavioral', 'mixed'
-  language text default 'en',
-  theme text default 'system',
-  reduced_motion boolean default false,
+  interview_type text, -- 'technical', 'behavioral', 'hr'
+  updated_at timestamptz default now()
+);
+
+-- 2.5. ONBOARDING RESPONSES (Store user onboarding selections)
+create table public.onboarding_responses (
+  user_id uuid references public.users(id) on delete cascade primary key,
+  profile_types text[], -- e.g., ['Student', 'Recent Graduate']
+  experience_years text, -- e.g., '0-1 years', '1-3 years'
+  goals text[], -- e.g., ['Land First Job', 'Improve Confidence']
+  completed_at timestamptz default now(),
   updated_at timestamptz default now()
 );
 
@@ -90,7 +96,6 @@ create table public.responses (
   session_id uuid references public.sessions(id) on delete cascade,
   question_id uuid references public.session_questions(id) on delete cascade,
   response_text text,
-  audio_url text,
   response_duration integer, -- in seconds
   submitted_at timestamptz default now()
 );
@@ -129,6 +134,7 @@ create table public.user_activity (
 -- Enable Row Level Security (RLS) on all tables (Standard Practice)
 alter table public.users enable row level security;
 alter table public.user_preferences enable row level security;
+alter table public.onboarding_responses enable row level security;
 alter table public.skills enable row level security;
 alter table public.user_skills enable row level security;
 alter table public.sessions enable row level security;
@@ -145,6 +151,10 @@ create policy "Users can update own profile" on public.users for update using (a
 create policy "Users can view own preferences" on public.user_preferences for select using (auth.uid() = user_id);
 create policy "Users can insert own preferences" on public.user_preferences for insert with check (auth.uid() = user_id);
 create policy "Users can update own preferences" on public.user_preferences for update using (auth.uid() = user_id);
+
+create policy "Users can view own onboarding" on public.onboarding_responses for select using (auth.uid() = user_id);
+create policy "Users can insert own onboarding" on public.onboarding_responses for insert with check (auth.uid() = user_id);
+create policy "Users can update own onboarding" on public.onboarding_responses for update using (auth.uid() = user_id);
 
 create policy "Users can view sessions" on public.sessions for select using (auth.uid() = user_id);
 create policy "Users can insert sessions" on public.sessions for insert with check (auth.uid() = user_id);

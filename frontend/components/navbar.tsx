@@ -43,8 +43,8 @@ export function Navbar() {
         return (
             <nav className="fixed top-0 left-0 right-0 z-[1000] bg-background/80 backdrop-blur-md border-b border-border/50">
                 <div className="w-full px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <div className="flex items-center gap-2.5">
+                    <div className="flex items-center justify-between h-16 gap-3">
+                        <div className="flex items-center gap-2.5 flex-shrink-0">
                             <div className="text-lg font-bold text-foreground">
                                 Mock Mentor AI
                             </div>
@@ -63,9 +63,9 @@ export function Navbar() {
                 }`}
         >
             <div className="w-full px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16">
+                <div className="flex items-center justify-between h-16 gap-3">
                     {/* Logo / Brand */}
-                    <a href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+                    <a href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0">
                         <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
                             <span className="text-primary-foreground font-bold text-sm">M</span>
                         </div>
@@ -74,7 +74,7 @@ export function Navbar() {
                         </div>
                     </a>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4">
                         {/* Theme Toggle */}
                         <Button
                             variant="ghost"
@@ -92,9 +92,9 @@ export function Navbar() {
 
                         {/* Auth Buttons */}
                         {loading ? (
-                            <div className="w-20 h-8 animate-pulse bg-muted rounded" />
+                            <div className="w-20 h-8 animate-pulse bg-muted rounded flex-shrink-0" />
                         ) : user ? (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-shrink-0">
                                 <span className="text-sm font-medium hidden sm:inline-block">
                                     {user.email?.split('@')[0]}
                                 </span>
@@ -115,7 +115,7 @@ export function Navbar() {
                                 </Button>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-shrink-0">
                                 <Button asChild variant="ghost" size="sm">
                                     <a href="/login">Login</a>
                                 </Button>

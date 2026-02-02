@@ -154,9 +154,13 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
     setFormError("");
 
     try {
+      // Import auth headers helper
+      const { getAuthHeaders } = await import('@/lib/auth-headers');
+      const headers = await getAuthHeaders();
+
       const response = await fetch('/api/interview/start', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ interviewConfig }),
       });
 
@@ -386,14 +390,14 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
 
           {/* Audio Mode Toggle */}
           <div className="audio-mode-toggle p-4 rounded-lg bg-muted/20 border border-border/40 transition-all duration-200 hover:border-border/60">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-2 gap-3">
               <div className="flex items-center gap-2.5">
                 {audioMode ? (
-                  <div className="p-1.5 rounded-lg bg-primary/10">
+                  <div className="p-1.5 rounded-lg bg-primary/10 flex-shrink-0">
                     <Mic className="h-4 w-4 text-primary" />
                   </div>
                 ) : (
-                  <div className="p-1.5 rounded-lg bg-muted">
+                  <div className="p-1.5 rounded-lg bg-muted flex-shrink-0">
                     <MicOff className="h-4 w-4 text-muted-foreground" />
                   </div>
                 )}
@@ -405,6 +409,7 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
                 id="audio-mode"
                 checked={audioMode}
                 onCheckedChange={handleAudioModeToggle}
+                className="flex-shrink-0"
               />
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -426,7 +431,7 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
             className="start-interview-button w-full mt-4 h-12 font-semibold text-base bg-primary text-primary-foreground hover:scale-[1.02] hover:shadow-xl elevation-2 glow-effect transition-all duration-200"
             size="lg"
           >
-            <span className="flex items-center gap-2">
+            <span className="flex items-center justify-center gap-2">
               Start Interview Session
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />

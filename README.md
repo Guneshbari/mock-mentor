@@ -7,6 +7,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15.1-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Groq](https://img.shields.io/badge/Groq-AI-orange?style=for-the-badge&logo=ai&logoColor=white)](https://groq.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
@@ -18,43 +19,49 @@
 
 ## 🚀 Overview
 
-**Mock Mentor** is a cutting-edge AI interview platform designed to simulate real-world technical interviews. It uses **Google's Gemini 2.0 Flash** AI model to provide intelligent, adaptive questioning and comprehensive evaluation with human-like reasoning.
+**Mock Mentor** is a cutting-edge AI interview platform designed to simulate real-world technical interviews. It uses **Groq's Ultra-Fast LPU™** technology with **Llama 3** models to provide intelligent, adaptive questioning and comprehensive evaluation with near-instant responses.
+
+Data persistence and authentication are powered by **Supabase**, offering a seamless and secure user experience.
 
 ---
 
 ## ✨ Features
 
 ### 🧠 Intelligent Roadmap Engine
-- **5-Step Strict Progression**: Organized interview flow.
-- **Roles & Levels**: Customized for Freshers, Mid-level, and Seniors.
-- **Adaptive**: Adjusts difficulty based on your answers.
+- **5-Step Strict Progression**: Organized interview flow covering key competencies.
+- **Roles & Levels**: Customized for Freshers, Juniors, and Seniors.
+- **Adaptive Difficulty**: Questions adjust based on your experience level.
 
-### ⚡ Powered by Groq AI
-- **Speed**: Lightning-fast response times using Groq's LPU™.
-- **Intelligence**: Advanced reasoning with Llama 3 models.
-- **Flexibility**: Support for various open-source models via Groq.
+### ⚡ Powered by Groq & Llama 3
+- **Speed**: Lightning-fast response generation using Groq.
+- **Intelligence**: Advanced reasoning with Llama 3 70B models.
+- **Efficiency**: Optimized for real-time conversational latency.
+
+### 💾 Robust Persistence (Supabase)
+- **Secure Auth**: Email/Password and Social Login via Supabase Auth.
+- **History Tracking**: All interview sessions, questions, and answers are saved.
+- **Progress Monitoring**: Track your improvement over time.
 
 ### 📊 Comprehensive Analytics
 - **Real-time Feedback**: Instant scoring after every answer.
-- **Final Report**: A detailed breakdown of your performance across:
+- **Final Report**: detailed breakdown of performance:
   - 🛠️ **Technical Accuracy**
   - 🗣️ **Communication Clarity**
   - 🔍 **Depth of Understanding**
   - ✅ **Completeness**
 
 ### 🎨 Modern, Professional UI
-- **Professional Design**: Clean blue color scheme with enhanced typography and spacing.
-- **Responsive Layout**: Seamless experience across desktop, tablet, and mobile devices.
-- **Audio Mode**: Full Speech-to-Text and Text-to-Speech support for a hands-free experience.
-- **Modern Components**: Built with **Shadcn/UI**, **Tailwind CSS**, and smooth animations.
-- **Theme Support**: Beautiful light and dark modes with system preference detection.
-- **Live Progress**: Visual tracking of your 5-step interview journey.
+- **Professional Design**: Clean blue/neutral color scheme.
+- **Responsive Layout**: Seamless experience across all devices.
+- **Audio Mode**: Speak your answers with real-time transcription.
+- **Modern Components**: Built with **Shadcn/UI**, **Tailwind CSS**, and **Framer Motion**.
+- **Theme Support**: Beautiful light and dark modes.
 
 ---
 
 ## 🏗️ Architecture
 
-Mock Mentor uses a **Composable Block Architecture** in the backend to separate concerns and allow for easy scalability.
+Mock Mentor uses a **Composable Block Architecture** in the backend for modularity and scalability.
 
 ```mermaid
 graph TD
@@ -65,56 +72,37 @@ graph TD
     C -->|Report| F["Feedback Block"]
     D -->|"Llama 3 70B"| G["Groq AI"]
     E -->|"Llama 3 70B"| G
+    H["Supabase Auth"] <--> A
+    I["Supabase DB"] <--> B
 ```
 
 ### Key Services
-| Service | Responsibility | Model Used |
+| Service | Responsibility | Technology |
 |---------|----------------|------------|
-| **RoleBlock** | Define specific focus areas per job role | N/A (Role Strategies) |
+| **RoleBlock** | Define specific focus areas per job role | Logic Strategies |
 | **QuestionGenerator** | Create adaptive, unique questions | `llama-3.3-70b-versatile` |
 | **EvaluationBlock** | Score answers against rubrics | `llama-3.3-70b-versatile` |
 | **FeedbackBlock** | Compile final detailed report | `llama-3.3-70b-versatile` |
-| **AnswerAnalyzer** | Analyze answer quality and depth | `llama-3.3-70b-versatile` |
-| **QuestionElaboration** | Elaborate on questions for clarity | `llama-3.3-70b-versatile` |
+| **DatabaseService** | Persist sessions, questions, and responses | **Supabase (PostgreSQL)** |
 
 ---
 
 ## 🗺️ Interview Roadmaps
 
-Every interview follows a specific path. Here are examples of how the "Frontend Developer" track differs by level:
+Every interview follows a specific path. Examples for "Frontend Developer":
 
 | Step | 🌱 Fresh / Junior | 💎 Senior / Lead |
 |------|-------------------|------------------|
-| **1** | **HTML/CSS & DOM** <br>*(Box model, Semantic HTML)* | **System Architecture** <br>*(Scalability, Monorepos)* |
-| **2** | **JavaScript Basics** <br>*(ES6+, Arrays, Events)* | **Performance Engineering** <br>*(Web Vitals, SSR vs CSR)* |
-| **3** | **React Basics** <br>*(Props, State, Components)* | **Micro-frontends** <br>*(Module Federation, Strategy)* |
-| **4** | **Debugging** <br>*(Console, Common errors)* | **Advanced Security** <br>*(XSS/CSRF, Auth patterns)* |
-| **5** | **Version Control** <br>*(Git basics)* | **Leadership & Strategy** <br>*(Mentoring, Tech choices)* |
-
+| **1** | **HTML/CSS & DOM** | **System Architecture** |
+| **2** | **JavaScript Basics** | **Performance Engineering** |
+| **3** | **React Basics** | **Micro-frontends** |
+| **4** | **Debugging** | **Advanced Security** |
+| **5** | **Version Control** | **Leadership & Strategy** |
 
 ### Supported Roles
-
-Mock Mentor supports **14 different job roles**, each with customized questions:
-
-- 💻 Frontend Developer
-- ⚙️ Backend Developer
-- 🔄 Full Stack Developer
-- 🚀 DevOps Engineer
-- 📊 Data Scientist
-- 🤖 Machine Learning Engineer
-- 📱 Mobile Developer
-- 🧪 QA Engineer
-- 📋 Product Manager
-- 🎨 UI/UX Designer
-- 🏛️ Software Architect
-- ☁️ Cloud Engineer
-- 🔒 Security Engineer
-- 🗄️ Database Administrator
-
-Each role has **45 unique questions** across all interview types and experience levels. For detailed roadmaps, see [ROADMAPS.md](ROADMAPS.md).
+Mock Mentor supports **14 unique job roles** including Frontend, Backend, Full Stack, DevOps, Data Science, and more.
 
 ---
-
 
 ## 🛠️ Project Structure
 
@@ -124,29 +112,22 @@ mock-mentor/
 │   ├── src/
 │   │   ├── services/         # Core Business Logic
 │   │   │   ├── blocks/       # AI Logic Blocks
-│   │   │   │   ├── RoleBlock.js
-│   │   │   │   ├── RoleStrategies.js
 │   │   │   │   ├── QuestionGeneratorBlock.js
-│   │   │   │   ├── QuestionElaborationBlock.js
-│   │   │   │   ├── EvaluationBlock.js
-│   │   │   │   ├── AnswerAnalyzer.js
-│   │   │   │   └── FeedbackBlock.js
-│   │   │   ├── GroqService.js      # Groq AI Integration
-│   │   │   ├── GroqService.js      # Groq Integration (Optional)
-│   │   │   ├── ai.service.js       # AI Orchestration
+│   │   │   │   └── EvaluationBlock.js
+│   │   │   ├── database.service.js # Supabase Integration
+│   │   │   ├── ai.service.js       # Groq Integration
 │   │   │   └── interview.service.js
-│   │   ├── controllers/      # API Route Controllers
+│   │   ├── middleware/       # Auth Middleware
 │   │   └── server.js         # Entry Point
-│   ├── .env                  # Secrets (API Keys) - Located in backend root
 │   └── package.json
 │
 ├── frontend/                 # Next.js Application
 │   ├── app/                  # App Router Pages
 │   ├── components/           # React Components (Shadcn)
-│   ├── lib/                  # Utilities
+│   ├── lib/                  # Utilities (Supabase Client)
 │   └── package.json
 │
-└── README.md
+└── supabase/                 # Database Schema & Migrations
 ```
 
 ---
@@ -154,10 +135,9 @@ mock-mentor/
 ## 🚀 Getting Started
 
 ### Prerequisites
-- **Node.js** 18.0 or higher
-- **npm** or **yarn**
-- **Groq API Key**
-  - Get free key at [console.groq.com](https://console.groq.com/)
+- **Node.js** 18.0+
+- **Groq API Key** ([Get it here](https://console.groq.com/))
+- **Supabase Account** & Project ([Get it here](https://supabase.com/))
 
 ### Installation
 
@@ -172,62 +152,45 @@ mock-mentor/
    cd backend
    npm install
    
-   # Create Environment Configuration
+   # Create .env
    echo "PORT=8000" > .env
-   # For Groq AI (Recommended)
-   echo "GROQ_API_KEY=your_groq_key_here" >> .env
+   echo "GROQ_API_KEY=your_groq_key" >> .env
+   echo "SUPABASE_URL=your_supabase_url" >> .env
+   echo "SUPABASE_KEY=your_supabase_service_role_key" >> .env
    ```
 
 3. **Frontend Setup**
    ```bash
    cd ../frontend
    npm install
-   ```
-
-4. **Run the Application**
-   Open two terminals:
    
-   **Terminal 1 (Backend)**
-   ```bash
-   cd backend
-   npm run dev
+   # Create .env.local
+   echo "NEXT_PUBLIC_BACKEND_URL=http://localhost:8000" > .env.local
+   echo "NEXT_PUBLIC_SUPABASE_URL=your_supabase_url" >> .env.local
+   echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key" >> .env.local
    ```
+
+4. **Database Setup**
+   - Run the SQL scripts from `supabase/schema.sql` in your Supabase SQL Editor to create tables.
+
+5. **Run the Application**
    
-   **Terminal 2 (Frontend)**
-   ```bash
-   cd frontend
-   npm run dev
-   ```
+   **Backend**: `cd backend && npm run dev`
+   
+   **Frontend**: `cd frontend && npm run dev`
 
-   Visit **http://localhost:3000** to start your interview!
-
----
-
-## � Security & Deployment
-
-- **Environment Isolation**: API keys are strictly kept in backend `.env` and never exposed to the client.
-- **Deployment Ready**:
-  - **Frontend**: Deploy to platforms like Vercel, Netlify, or any static hosting service.
-  - **Backend**: Ready for [Render](https://render.com) or [Railway](https://railway.app).
-  - **Docker**: Includes Dockerfile for containerized deployment (optional).
+   Visit **http://localhost:3000** to start!
 
 ---
 
 ## 🤝 Contributing
 
 We love contributions! Please follow these steps:
-
 1. Fork the repository.
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
 4. Push to the branch (`git push origin feature/AmazingFeature`).
 5. Open a Pull Request.
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License**.
 
 ---
 

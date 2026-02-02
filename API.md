@@ -1,6 +1,6 @@
 # Mock Mentor API Documentation
 
-Backend API for the Mock Mentor AI Interview Platform
+Backend API for the Mock Mentor AI Interview Platform, powered by **Groq & Llama 3**.
 
 ## Base URL
 
@@ -9,43 +9,47 @@ Development: http://localhost:8000
 Production: Your deployed backend URL
 ```
 
+## Authentication
+
+All API endpoints that require user context (database persistence) accept a `Authorization` header with a Supabase JWT token.
+
+```
+Authorization: Bearer <SUPABASE_JWT_TOKEN>
+```
+
+If no token is provided, the API works in ephemeral mode (no database storage).
+
+---
+
 ## API Endpoints
 
 ### 1. Start Interview
 
-**POST** `/api/start`
+**POST** `/api/interview/start`
 
-Initialize a new interview session with role, experience level, and interview type.
+Initialize a new interview session.
 
 **Request Body:**
 ```json
 {
-  "role": "Frontend Developer",
-  "experienceLevel": "mid",
-  "interviewType": "technical"
+  "interviewConfig": {
+    "role": "Frontend Developer",
+    "candidateName": "John Doe",
+    "candidateGender": "male",
+    "interviewType": "technical", // "technical", "hr", "behavioral"
+    "experiencePreset": "mid",    // "fresh", "junior", "senior"
+    "audioMode": false
+  }
 }
 ```
-
-**Parameters:**
-- `role` (string, required): Job role (e.g., "Frontend Developer", "Backend Developer", etc.)
-- `experienceLevel` (string, required): Experience level - `"fresh"`, `"mid"`, or `"senior"`
-- `interviewType` (string, required): Interview type - `"technical"`, `"hr"`, or `"behavioral"`
 
 **Response:**
 ```json
 {
-  "question": "Explain the difference between let, const, and var in JavaScript.",
-  "questionNumber": 1,
-  "totalQuestions": 5,
-  "context": {
-    "role": "Frontend Developer",
-    "experienceLevel": "mid",
-    "interviewType": "technical",
-    "currentStep": 1,
-    "focusArea": "JavaScript ES6+ Syntax & Async Patterns",
-    "sessionId": "abc123...",
-    "conversationHistory": []
-  }
+  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+  "firstQuestion": "Explain the concept of closures in JavaScript...",
+  "totalSteps": 5,
+  "questionAudio": "base64_audio_string..." // If audioMode is true
 }
 ```
 
@@ -53,262 +57,119 @@ Initialize a new interview session with role, experience level, and interview ty
 
 ### 2. Submit Answer & Get Next Question
 
-**POST** `/api/next`
+**POST** `/api/interview/next`
 
-Submit an answer to the current question and receive the next question or evaluation.
+Submit an answer (text or audio) and receive the next question or final report.
 
-**Request Body:**
+**Request Body (Text):**
 ```json
 {
-  "answer": "Let and const are block-scoped while var is function-scoped...",
-  "context": {
-    "role": "Frontend Developer",
-    "experienceLevel": "mid",
-    "interviewType": "technical",
-    "currentStep": 1,
-    "previousQuestion": "Explain the difference between let, const, and var.",
-    "conversationHistory": [...],
-    "sessionId": "abc123..."
-  }
+  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+  "previousAnswerText": "Closures allow a function to access...",
+  "inputMode": "text"
 }
 ```
 
-**Parameters:**
-- `answer` (string, required): The user's answer to the previous question
-- `context` (object, required): Interview context received from the previous API call
+**Request Body (Audio):**
+```json
+{
+  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+  "audioAnswer": "base64_encoded_audio...",
+  "inputMode": "audio",
+  "audioMimeType": "audio/webm"
+}
+```
 
 **Response (Next Question):**
 ```json
 {
-  "question": "How would you optimize a React component that re-renders too frequently?",
-  "questionNumber": 2,
-  "totalQuestions": 5,
-  "context": {
-    "role": "Frontend Developer",
-    "experienceLevel": "mid",
-    "interviewType": "technical",
-    "currentStep": 2,
-    "focusArea": "React Performance Optimization",
-    "sessionId": "abc123...",
-    "conversationHistory": [
-      {
-        "question": "Explain the difference between let, const, and var.",
-        "answer": "Let and const are block-scoped...",
-        "step": 1
-      }
-    ]
-  }
+  "nextQuestion": "How does this relate to memory management?",
+  "currentStep": 2,
+  "totalSteps": 5,
+  "questionAudio": "base64_audio_string...",
+  "transcribedAnswer": "User's speech converted to text..."
 }
 ```
 
-**Response (Final Evaluation - after 5th question):**
+**Response (Final Report):**
 ```json
 {
-  "sessionComplete": true,
   "finalReport": {
-    "overallScore": 78,
+    "overallScore": 85,
     "categoryScores": {
-      "technicalAccuracy": 80,
-      "communicationClarity": 75,
-      "depthOfUnderstanding": 82,
-      "completeness": 76
+      "communication": 80,
+      "technicalDepth": 90,
+      "clarity": 85,
+      "confidence": 85
     },
-    "strengths": [
-      "Strong understanding of JavaScript fundamentals",
-      "Good explanations with practical examples"
-    ],
-    "improvements": [
-      "Could elaborate more on edge cases",
-      "Consider discussing performance implications"
-    ],
-    "detailedAnalysis": {
-      "HTML5 Semantic Elements & Accessibility": {
-        "score": 85,
-        "feedback": "Excellent understanding of semantic HTML..."
-      },
-      "React Performance Optimization": {
-        "score": 75,
-        "feedback": "Good grasp of React.memo and useMemo..."
-      }
-      // ... more step-by-step feedback
-    }
-  }
+    "identifiedStrengths": ["Clear explanation...", "Good examples..."],
+    "areasForImprovement": ["Could be more concise..."],
+    "actionableFeedback": ["Practice STAR method..."]
+  },
+  "currentStep": 5,
+  "totalSteps": 5
 }
 ```
 
 ---
 
-### 3. Health Check
+### 3. Get Report
 
-**GET** `/health`
+**GET** `/api/interview/report?sessionId=<SESSION_ID>`
 
-Check if the backend server is running.
+Retrieve the final report for a completed session.
 
 **Response:**
 ```json
 {
-  "status": "ok",
-  "message": "Mock Mentor API is running",
-  "timestamp": "2024-01-28T00:00:00.000Z"
+  "finalReport": { ... }, // Same as above
+  "audioSummary": {
+    "text": "Overall you did great...",
+    "speechParams": { ... }
+  }
 }
 ```
 
 ---
 
-## Interview Configuration
+### 4. Transcribe Audio
 
-### Supported Roles
+**POST** `/api/interview/transcribe`
 
-- Frontend Developer
-- Backend Developer
-- Full Stack Developer
-- DevOps Engineer
-- Data Scientist
-- Machine Learning Engineer
-- Mobile Developer
-- QA Engineer
-- Product Manager
-- UI/UX Designer
-- Software Architect
-- Cloud Engineer
-- Security Engineer
-- Database Administrator
+Utility endpoint to transcribe audio without submitting an answer.
 
-### Experience Levels
-
-- `fresh` - Entry level / Fresh graduate
-- `mid` - Mid-level (2-5 years experience)
-- `senior` - Senior level (5+ years experience)
-
-### Interview Types
-
-- `technical` - Technical questions focused on role-specific skills
-- `hr` - HR/Culture fit questions
-- `behavioral` - STAR method behavioral questions
-
----
-
-## Error Handling
-
-All endpoints return errors in the following format:
-
+**Request Body:**
 ```json
 {
-  "error": "Error message description",
-  "details": "Additional error details (if available)"
+  "audioAnswer": "base64_encoded_audio...",
+  "audioMimeType": "audio/webm"
 }
 ```
 
-**Common HTTP Status Codes:**
-- `200` - Success
-- `400` - Bad Request (invalid parameters)
-- `500` - Internal Server Error
+**Response:**
+```json
+{
+  "transcription": "Transcribed text goes here..."
+}
+```
 
 ---
 
 ## Environment Variables
 
-The backend requires the following environment variables:
+The backend requires the following in `.env`:
 
 ```env
 PORT=8000
-GROQ_API_KEY=your_groq_api_key                # Required for Groq (default)
-GEMINI_API_KEY=your_google_gemini_api_key     # Optional - alternative to Groq
-
-# Optional model configurations
-QUESTION_MODEL=llama-3.3-70b-versatile
-EVALUATION_MODEL=llama-3.3-70b-versatile
-REPORT_MODEL=llama-3.3-70b-versatile
+GROQ_API_KEY=your_groq_api_key
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_service_role_key
 ```
 
 ---
 
-## AI Models Used
+## AI Models
 
-The backend uses **Groq AI** by default:
-
-- **Question Generation**: `llama-3.3-70b-versatile`
-- **Answer Evaluation**: `llama-3.3-70b-versatile`
-- **Final Report**: `llama-3.3-70b-versatile`
-
-You can also use Google Gemini AI as an alternative by providing a `GEMINI_API_KEY` instead.
-
----
-
-## Rate Limiting
-
-Currently, there are no rate limits imposed by the backend. However, be aware of:
-- Google Gemini API rate limits (check your API quota)
-- Groq API rate limits (if using Groq)
-
----
-
-## Interview Flow
-
-```
-1. Client calls /api/start with role, experience, and interview type
-   ↓
-2. Backend generates first question based on role strategy
-   ↓
-3. Client displays question to user
-   ↓
-4. User provides answer
-   ↓
-5. Client calls /api/next with answer and context
-   ↓
-6. Backend analyzes answer and generates next question (or final report)
-   ↓
-7. Repeat steps 3-6 until 5 questions are answered
-   ↓
-8. Backend returns final comprehensive evaluation report
-```
-
----
-
-## Example Usage
-
-### JavaScript/TypeScript (Fetch)
-
-```typescript
-// Start interview
-const startResponse = await fetch('http://localhost:8000/api/start', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    role: 'Frontend Developer',
-    experienceLevel: 'mid',
-    interviewType: 'technical'
-  })
-});
-const startData = await startResponse.json();
-
-// Submit answer and get next question
-const nextResponse = await fetch('http://localhost:8000/api/next', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    answer: 'My answer here...',
-    context: startData.context
-  })
-});
-const nextData = await nextResponse.json();
-```
-
----
-
-## Architecture
-
-The backend follows a **Composable Block Architecture**:
-
-- **RoleBlock** - Manages role-specific interview roadmaps
-- **QuestionGeneratorBlock** - Generates adaptive questions
-- **QuestionElaborationBlock** - Elaborates on questions for clarity
-- **AnswerAnalyzer** - Analyzes answer quality
-- **EvaluationBlock** - Scores answers
-- **FeedbackBlock** - Compiles final reports
-
-All blocks interact with either **GeminiService** or **GroqService** for AI capabilities.
-
----
-
-For more information, see the main [README.md](../README.md)
+The backend utilizes **Groq** to run open-source models with high performance:
+- **Questions & Evaluation**: `llama-3.3-70b-versatile`
+- **Speech-to-Text**: `whisper-large-v3`

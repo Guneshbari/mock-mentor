@@ -96,6 +96,12 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// ============================================
+// AUTH MIDDLEWARE
+// ============================================
+const extractUser = require('./middleware/auth.middleware');
+app.use(extractUser); // Extract userId from Supabase JWT
+
 // Ignore favicon requests
 app.get('/favicon.ico', (req, res) => {
   res.status(204).end();
