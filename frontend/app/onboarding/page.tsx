@@ -82,7 +82,7 @@ export default function OnboardingPage() {
             }
 
             toast.success("Profile setup complete!");
-            router.push("/interview-type");
+            router.push("/dashboard");
         } catch (error) {
             console.error("Unexpected error:", error);
             toast.error("An unexpected error occurred");

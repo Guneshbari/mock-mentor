@@ -3,7 +3,7 @@
 import React from "react"
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,8 +17,9 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { X, Briefcase, Code, Users, Mic, MicOff } from "lucide-react";
+import { X, Briefcase, Code, Users, Mic, MicOff, Play, AlertCircle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 interface QuestionAudio {
   text: string;
@@ -56,6 +57,12 @@ const interviewTypeIcons = {
   behavioral: Briefcase,
 };
 
+const interviewTypeDescriptions = {
+  hr: "General questions about your background, experience, and career goals",
+  technical: "Role-specific technical questions and problem-solving scenarios",
+  behavioral: "Situational questions about how you handle workplace scenarios",
+};
+
 export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps) {
   const [selectedInterviewType, setSelectedInterviewType] = useState<
     "hr" | "technical" | "behavioral"
@@ -70,6 +77,7 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
   const [audioMode, setAudioMode] = useState(false);
   const [formError, setFormError] = useState("");
   const [micPermissionStatus, setMicPermissionStatus] = useState<'unknown' | 'granted' | 'denied'>('unknown');
+  const [loading, setLoading] = useState(false);
 
   // Check microphone permission when audio mode is enabled
   const handleAudioModeToggle = async (enabled: boolean) => {
@@ -79,10 +87,12 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
         stream.getTracks().forEach(track => track.stop()); // Release immediately
         setMicPermissionStatus('granted');
         setAudioMode(true);
+        toast.success("Microphone access granted");
       } catch (error) {
         console.error('Microphone permission denied:', error);
         setMicPermissionStatus('denied');
         setAudioMode(false);
+        toast.error("Microphone access denied. Please enable it in your browser settings.");
       }
     } else {
       setAudioMode(false);
@@ -104,6 +114,7 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
   };
 
   const handleStartInterview = async () => {
+    setLoading(true);
     // Auto-commit any pending skill input
     let finalSkills = [...skills];
     if (skillInputValue.trim()) {
@@ -133,22 +144,27 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
     // Validate mandatory fields
     if (!candidateName.trim()) {
       setFormError("Please enter your name to continue.");
+      setLoading(false);
       return;
     }
     if (!role.trim()) {
       setFormError("Please enter a job role to continue.");
+      setLoading(false);
       return;
     }
     if (finalSkills.length === 0) {
       setFormError("Please add at least one skill to continue.");
+      setLoading(false);
       return;
     }
     if (!resumeText.trim()) {
       setFormError("Please provide your resume or background summary to continue.");
+      setLoading(false);
       return;
     }
     if (!experiencePreset) {
       setFormError("Please select an experience level preset to continue.");
+      setLoading(false);
       return;
     }
     setFormError("");
@@ -167,6 +183,7 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
       if (!response.ok) throw new Error('Failed to start interview');
 
       const data = await response.json();
+      toast.success("Interview session started!");
       onStartInterview({
         ...interviewConfig,
         sessionId: data.sessionId,
@@ -176,6 +193,7 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
       });
     } catch (error) {
       console.error('Error starting interview:', error);
+      toast.error("Failed to start interview. Please try again.");
       // Fallback: still call onStartInterview for now
       onStartInterview({
         ...interviewConfig,
@@ -183,263 +201,287 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
         firstQuestion: 'Tell me about yourself.',
         totalSteps: 5,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const SelectedIcon = interviewTypeIcons[selectedInterviewType];
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 py-20 page-gradient-bg">
-      <Card className="interview-setup-card w-full max-w-2xl elevation-3 border-border/30 bg-card/95 backdrop-blur-sm animate-fade-up">
-        <CardHeader className="text-center pb-8 space-y-4">
-          <div className="flex justify-center mb-2 animate-scale-in">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center ring-2 ring-primary/10 transition-all duration-300 hover:scale-110 hover:ring-primary/30">
-              <SelectedIcon className="h-8 w-8 text-primary" />
+    <div className="max-w-6xl mx-auto space-y-6 pb-16">
+      {/* Header Card */}
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-background animate-fade-up">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-primary/10 flex-shrink-0">
+              <SelectedIcon className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-foreground mb-1">
+                Setup Your Interview
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {interviewTypeDescriptions[selectedInterviewType]}
+              </p>
             </div>
           </div>
-          <div className="space-y-2">
-            <CardTitle className="text-3xl font-bold text-foreground tracking-tight">
-              Mock Mentor AI
-            </CardTitle>
-            <p className="text-muted-foreground text-base max-w-md mx-auto leading-relaxed">
-              Practice interviews with intelligent AI feedback and adaptive questioning
-            </p>
-          </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
-          {/* Candidate Name */}
-          <div className="candidate-name-input flex flex-col gap-2.5">
-            <Label htmlFor="candidate-name" className="text-sm font-semibold text-foreground">
-              Your Name <span className="text-destructive text-base">*</span>
-            </Label>
-            <Input
-              id="candidate-name"
-              placeholder="Enter your full name"
-              value={candidateName}
-              onChange={(e) => setCandidateName(e.target.value)}
-              className="h-11 bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary focus:bg-background focus:shadow-sm hover:border-border"
-            />
-          </div>
-
-          {/* Candidate Gender */}
-          <div className="candidate-gender-selector flex flex-col gap-2.5">
-            <Label htmlFor="candidate-gender" className="text-sm font-semibold text-foreground">
-              Gender
-            </Label>
-            <Select value={candidateGender} onValueChange={(value: any) => setCandidateGender(value)}>
-              <SelectTrigger
-                id="candidate-gender"
-                className="h-11 bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 hover:border-border"
-              >
-                <SelectValue placeholder="Select your gender" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="male">Male</SelectItem>
-                <SelectItem value="female">Female</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-                <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Interview Type Selection */}
-          <div className="interview-type-selector flex flex-col gap-2.5">
-            <Label className="text-sm font-semibold text-foreground">
-              Interview Type <span className="text-destructive text-base">*</span>
-            </Label>
-            <Tabs
-              value={selectedInterviewType}
-              onValueChange={(value) =>
-                setSelectedInterviewType(value as "hr" | "technical" | "behavioral")
-              }
-              className="w-full"
-            >
-              <TabsList className="grid w-full grid-cols-3 bg-muted/40 p-1 h-auto gap-1">
-                <TabsTrigger
-                  value="hr"
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-200 hover:bg-muted data-[state=active]:scale-[1.02] py-2.5"
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  HR
-                </TabsTrigger>
-                <TabsTrigger
-                  value="technical"
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-200 hover:bg-muted data-[state=active]:scale-[1.02] py-2.5"
-                >
-                  <Code className="h-4 w-4 mr-2" />
-                  Technical
-                </TabsTrigger>
-                <TabsTrigger
-                  value="behavioral"
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-200 hover:bg-muted data-[state=active]:scale-[1.02] py-2.5"
-                >
-                  <Briefcase className="h-4 w-4 mr-2" />
-                  Behavioral
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-
-          {/* Job Role Input */}
-          <div className="job-role-input flex flex-col gap-2.5">
-            <Label htmlFor="target-job-role" className="text-sm font-semibold text-foreground">
-              Target Role <span className="text-destructive text-base">*</span>
-            </Label>
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger
-                id="target-job-role"
-                className="h-11 bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 hover:border-border"
-              >
-                <SelectValue placeholder="Choose your target role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Frontend Developer">Frontend Developer</SelectItem>
-                <SelectItem value="Backend Developer">Backend Developer</SelectItem>
-                <SelectItem value="Full Stack Developer">Full Stack Developer</SelectItem>
-                <SelectItem value="DevOps Engineer">DevOps Engineer</SelectItem>
-                <SelectItem value="Data Scientist">Data Scientist</SelectItem>
-                <SelectItem value="Machine Learning Engineer">Machine Learning Engineer</SelectItem>
-                <SelectItem value="Mobile Developer">Mobile Developer</SelectItem>
-                <SelectItem value="QA Engineer">QA Engineer</SelectItem>
-                <SelectItem value="Product Manager">Product Manager</SelectItem>
-                <SelectItem value="UI/UX Designer">UI/UX Designer</SelectItem>
-                <SelectItem value="Software Architect">Software Architect</SelectItem>
-                <SelectItem value="Cloud Engineer">Cloud Engineer</SelectItem>
-                <SelectItem value="Security Engineer">Security Engineer</SelectItem>
-                <SelectItem value="Database Administrator">Database Administrator</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Skills Input */}
-          <div className="skills-input flex flex-col gap-2.5">
-            <Label htmlFor="candidate-skills" className="text-sm font-semibold text-foreground">
-              Skills <span className="text-destructive text-base">*</span>
-            </Label>
-            <Input
-              id="candidate-skills"
-              placeholder="Type a skill and press Enter (e.g. React, TypeScript, Node.js)"
-              value={skillInputValue}
-              onChange={(e) => setSkillInputValue(e.target.value)}
-              onKeyDown={handleAddSkill}
-              className="h-11 bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary focus:bg-background focus:shadow-sm hover:border-border"
-            />
-            {skills.length > 0 && (
-              <div className="skill-badges-container flex flex-wrap gap-2 mt-1">
-                {skills.map((skill, index) => (
-                  <Badge
-                    key={skill}
-                    variant="secondary"
-                    className="skill-badge px-3 py-1.5 text-sm flex items-center gap-1.5 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 hover:scale-105 hover:shadow-sm transition-all duration-200 animate-scale-in"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    {skill}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveSkill(skill)}
-                      className="ml-0.5 hover:text-destructive hover:scale-110 transition-all duration-150"
-                      aria-label={`Remove ${skill}`}
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Resume Input */}
-          <div className="resume-input flex flex-col gap-2.5">
-            <Label htmlFor="resume-content" className="text-sm font-semibold text-foreground">
-              Resume / Background <span className="text-destructive text-base">*</span>
-            </Label>
-            <Textarea
-              id="resume-content"
-              placeholder="Paste your resume or provide a brief summary of your experience and background..."
-              value={resumeText}
-              onChange={(e) => setResumeText(e.target.value)}
-              className="min-h-[120px] resize-none bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary focus:bg-background focus:shadow-sm hover:border-border"
-            />
-          </div>
-
-          {/* Experience Preset */}
-          <div className="experience-preset-selector flex flex-col gap-2.5">
-            <Label htmlFor="experience-preset" className="text-sm font-semibold text-foreground">
-              Experience Level <span className="text-destructive text-base">*</span>
-            </Label>
-            <Select value={experiencePreset} onValueChange={setExperiencePreset}>
-              <SelectTrigger
-                id="experience-preset"
-                className="h-11 bg-muted/30 border-border/60 transition-all duration-200 focus:ring-2 focus:ring-primary/50 hover:border-border"
-              >
-                <SelectValue placeholder="Select your experience level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="fresh">Fresh Graduate / Entry Level</SelectItem>
-                <SelectItem value="junior">Junior (1-3 years)</SelectItem>
-                <SelectItem value="senior">Senior (3+ years)</SelectItem>
-              </SelectContent>
-            </Select>
-            {formError && (
-              <p className="text-sm text-destructive mt-1 animate-shake flex items-center gap-1">
-                <span className="inline-block w-1 h-1 rounded-full bg-destructive"></span>
-                {formError}
-              </p>
-            )}
-          </div>
-
-          {/* Audio Mode Toggle */}
-          <div className="audio-mode-toggle p-4 rounded-lg bg-muted/20 border border-border/40 transition-all duration-200 hover:border-border/60">
-            <div className="flex items-center justify-between mb-2 gap-3">
-              <div className="flex items-center gap-2.5">
-                {audioMode ? (
-                  <div className="p-1.5 rounded-lg bg-primary/10 flex-shrink-0">
-                    <Mic className="h-4 w-4 text-primary" />
-                  </div>
-                ) : (
-                  <div className="p-1.5 rounded-lg bg-muted flex-shrink-0">
-                    <MicOff className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                )}
-                <Label htmlFor="audio-mode" className="text-sm font-semibold text-foreground cursor-pointer">
-                  Voice Interview Mode
-                </Label>
-              </div>
-              <Switch
-                id="audio-mode"
-                checked={audioMode}
-                onCheckedChange={handleAudioModeToggle}
-                className="flex-shrink-0"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              {audioMode
-                ? "✓ Questions will be spoken aloud. You can answer using voice or text."
-                : "Enable to hear questions read aloud and respond with your voice."}
-            </p>
-            {micPermissionStatus === 'denied' && (
-              <p className="text-xs text-destructive mt-2 flex items-center gap-1 animate-shake">
-                <span className="inline-block w-1 h-1 rounded-full bg-destructive"></span>
-                Microphone access denied. Please enable it in your browser settings.
-              </p>
-            )}
-          </div>
-
-          {/* Start Button */}
-          <Button
-            onClick={handleStartInterview}
-            className="start-interview-button w-full mt-4 h-12 font-semibold text-base bg-primary text-primary-foreground hover:scale-[1.02] hover:shadow-xl elevation-2 glow-effect transition-all duration-200"
-            size="lg"
-          >
-            <span className="flex items-center justify-center gap-2">
-              Start Interview Session
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </span>
-          </Button>
         </CardContent>
       </Card>
+
+      {/* Two Column Layout for Main Form */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column */}
+        <div className="space-y-6">
+          {/* Personal Information */}
+          <Card className="animate-fade-up" style={{ animationDelay: "100ms" }}>
+            <CardHeader>
+              <CardTitle>Personal Information</CardTitle>
+              <CardDescription>Tell us about yourself</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="candidate-name">
+                  Your Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="candidate-name"
+                  placeholder="Enter your full name"
+                  value={candidateName}
+                  onChange={(e) => setCandidateName(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="candidate-gender">Gender</Label>
+                <Select value={candidateGender} onValueChange={(value: any) => setCandidateGender(value)}>
+                  <SelectTrigger id="candidate-gender">
+                    <SelectValue placeholder="Select your gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Interview Type */}
+          <Card className="animate-fade-up" style={{ animationDelay: "150ms" }}>
+            <CardHeader>
+              <CardTitle>Interview Type <span className="text-destructive">*</span></CardTitle>
+              <CardDescription>Choose the type of interview</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs
+                value={selectedInterviewType}
+                onValueChange={(value) =>
+                  setSelectedInterviewType(value as "hr" | "technical" | "behavioral")
+                }
+                className="w-full"
+              >
+                <TabsList className="grid w-full grid-cols-3 h-auto p-1">
+                  <TabsTrigger value="hr" className="gap-2 py-3">
+                    <Users className="h-4 w-4" />
+                    <span className="hidden sm:inline">HR</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="technical" className="gap-2 py-3">
+                    <Code className="h-4 w-4" />
+                    <span className="hidden sm:inline">Technical</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="behavioral" className="gap-2 py-3">
+                    <Briefcase className="h-4 w-4" />
+                    <span className="hidden sm:inline">Behavioral</span>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </CardContent>
+          </Card>
+
+          {/* Skills */}
+          <Card className="animate-fade-up" style={{ animationDelay: "200ms" }}>
+            <CardHeader>
+              <CardTitle>Skills <span className="text-destructive">*</span></CardTitle>
+              <CardDescription>Add your key skills (press Enter)</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Input
+                id="candidate-skills"
+                placeholder="Type a skill and press Enter"
+                value={skillInputValue}
+                onChange={(e) => setSkillInputValue(e.target.value)}
+                onKeyDown={handleAddSkill}
+              />
+              {skills.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {skills.map((skill) => (
+                    <Badge
+                      key={skill}
+                      variant="secondary"
+                      className="px-3 py-1.5 text-sm flex items-center gap-1.5 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 transition-colors"
+                    >
+                      {skill}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSkill(skill)}
+                        className="ml-0.5 hover:text-destructive transition-colors"
+                        aria-label={`Remove ${skill}`}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Audio Mode */}
+          <Card className="animate-fade-up" style={{ animationDelay: "250ms" }}>
+            <CardHeader>
+              <CardTitle>Interview Mode</CardTitle>
+              <CardDescription>Voice or text interaction</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${audioMode ? 'bg-primary/10' : 'bg-muted'}`}>
+                    {audioMode ? (
+                      <Mic className="h-5 w-5 text-primary" />
+                    ) : (
+                      <MicOff className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="audio-mode" className="font-semibold cursor-pointer">
+                      Voice Mode
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {audioMode ? "Voice enabled" : "Text only"}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="audio-mode"
+                  checked={audioMode}
+                  onCheckedChange={handleAudioModeToggle}
+                />
+              </div>
+              {micPermissionStatus === 'denied' && (
+                <div className="flex items-start gap-2 mt-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                  <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-destructive">
+                    Microphone access denied. Enable it in browser settings.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-6">
+          {/* Role & Experience */}
+          <Card className="animate-fade-up" style={{ animationDelay: "100ms" }}>
+            <CardHeader>
+              <CardTitle>Role & Experience</CardTitle>
+              <CardDescription>What position are you preparing for?</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="target-job-role">
+                  Target Role <span className="text-destructive">*</span>
+                </Label>
+                <Select value={role} onValueChange={setRole}>
+                  <SelectTrigger id="target-job-role">
+                    <SelectValue placeholder="Choose your target role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Frontend Developer">Frontend Developer</SelectItem>
+                    <SelectItem value="Backend Developer">Backend Developer</SelectItem>
+                    <SelectItem value="Full Stack Developer">Full Stack Developer</SelectItem>
+                    <SelectItem value="DevOps Engineer">DevOps Engineer</SelectItem>
+                    <SelectItem value="Data Scientist">Data Scientist</SelectItem>
+                    <SelectItem value="Machine Learning Engineer">Machine Learning Engineer</SelectItem>
+                    <SelectItem value="Mobile Developer">Mobile Developer</SelectItem>
+                    <SelectItem value="QA Engineer">QA Engineer</SelectItem>
+                    <SelectItem value="Product Manager">Product Manager</SelectItem>
+                    <SelectItem value="UI/UX Designer">UI/UX Designer</SelectItem>
+                    <SelectItem value="Software Architect">Software Architect</SelectItem>
+                    <SelectItem value="Cloud Engineer">Cloud Engineer</SelectItem>
+                    <SelectItem value="Security Engineer">Security Engineer</SelectItem>
+                    <SelectItem value="Database Administrator">Database Administrator</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="experience-preset">
+                  Experience Level <span className="text-destructive">*</span>
+                </Label>
+                <Select value={experiencePreset} onValueChange={setExperiencePreset}>
+                  <SelectTrigger id="experience-preset">
+                    <SelectValue placeholder="Select your experience level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fresh">Fresh Graduate / Entry Level</SelectItem>
+                    <SelectItem value="junior">Junior (1-3 years)</SelectItem>
+                    <SelectItem value="senior">Senior (3+ years)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Resume */}
+          <Card className="animate-fade-up" style={{ animationDelay: "150ms" }}>
+            <CardHeader>
+              <CardTitle>Resume / Background <span className="text-destructive">*</span></CardTitle>
+              <CardDescription>Your experience summary</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                id="resume-content"
+                placeholder="Paste your resume or provide a brief summary of your experience and background..."
+                value={resumeText}
+                onChange={(e) => setResumeText(e.target.value)}
+                className="min-h-[280px] lg:min-h-[443px] resize-none"
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Error Message */}
+      {formError && (
+        <div className="flex items-start gap-2 p-4 rounded-lg bg-destructive/10 border border-destructive/20 animate-shake">
+          <AlertCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-destructive font-medium">{formError}</p>
+        </div>
+      )}
+
+      {/* Start Button */}
+      <Button
+        onClick={handleStartInterview}
+        disabled={loading}
+        className="w-full h-12 text-base font-semibold gap-2 shadow-lg hover:shadow-xl transition-all"
+        size="lg"
+      >
+        {loading ? (
+          <>
+            <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            Starting Interview...
+          </>
+        ) : (
+          <>
+            <Play className="h-5 w-5" />
+            Start Interview Session
+          </>
+        )}
+      </Button>
     </div>
   );
 }

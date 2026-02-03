@@ -72,7 +72,7 @@ export default function SignupPage() {
             }
 
             toast.success("Account created successfully!");
-            router.push("/onboarding");
+            router.push("/dashboard");
         } catch (error) {
             setError("An unexpected error occurred");
         } finally {

@@ -16,7 +16,7 @@ export function Hero() {
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
                     <Button asChild size="lg" className="w-full sm:w-auto text-lg h-12 px-8">
-                        <Link href="/signup">Get Started Free <ArrowRight className="ml-2 h-5 w-5" /></Link>
+                        <Link href="/dashboard">Get Started Free <ArrowRight className="ml-2 h-5 w-5" /></Link>
                     </Button>
                     <Button asChild variant="outline" size="lg" className="w-full sm:w-auto text-lg h-12 px-8">
                         <Link href="/login">Login</Link>
@@ -159,7 +159,7 @@ export function Footer() {
                     Don't let interview anxiety hold you back. Build your confidence with Mock Mentor.
                 </p>
                 <Button asChild size="lg" className="h-12 px-8 text-lg">
-                    <Link href="/signup">Get Started Free <ArrowRight className="ml-2 h-5 w-5" /></Link>
+                    <Link href="/dashboard">Get Started Free <ArrowRight className="ml-2 h-5 w-5" /></Link>
                 </Button>
             </div>
         </section>

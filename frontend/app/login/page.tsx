@@ -53,8 +53,8 @@ export default function LoginPage() {
 
             console.log('✅ Login successful!');
             toast.success("Logged in successfully");
-            console.log('🔀 Redirecting to /interview-type...');
-            router.push("/interview-type");
+            console.log('🔀 Redirecting to /dashboard...');
+            router.push("/dashboard");
             router.refresh();
         } catch (error) {
             console.error('💥 Unexpected error:', error);

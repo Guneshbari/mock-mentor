@@ -465,7 +465,7 @@ export function InterviewSessionPanel({
   const handleRestartInterview = () => {
     stopSpeaking();
     sessionStorage.removeItem('interviewSession');
-    window.location.href = '/interview-type';
+    window.location.href = '/interview-setup';
   };
 
   // Keyboard shortcuts

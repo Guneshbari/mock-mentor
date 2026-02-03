@@ -101,7 +101,7 @@ export default function InterviewReportPage() {
     // Clear session data
     sessionStorage.removeItem('interviewSession');
     sessionStorage.removeItem('reportSessionId');
-    router.push('/interview-type');
+    router.push('/interview-setup');
   };
 
   if (isLoading) {

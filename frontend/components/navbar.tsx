@@ -111,7 +111,7 @@ export function Navbar() {
                                     Logout
                                 </Button>
                                 <Button asChild size="sm">
-                                    <a href="/interview-type">Dashboard</a>
+                                    <a href="/dashboard">Dashboard</a>
                                 </Button>
                             </div>
                         ) : (
