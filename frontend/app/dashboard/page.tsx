@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function DashboardPage() {
+function DashboardContent() {
     const { theme, setTheme } = useTheme();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -428,5 +428,17 @@ export default function DashboardPage() {
                 )}
             </main>
         </div>
+    );
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-pulse text-muted-foreground">Loading dashboard...</div>
+            </div>
+        }>
+            <DashboardContent />
+        </Suspense>
     );
 }
