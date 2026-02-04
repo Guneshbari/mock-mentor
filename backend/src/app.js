@@ -93,8 +93,35 @@ app.use((req, res, next) => {
 // ============================================
 // BODY PARSING
 // ============================================
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Debug middleware to log content-type for avatar uploads
+app.use((req, res, next) => {
+  if (req.path === '/api/dashboard/profile/avatar') {
+    console.log('[DEBUG] Avatar upload request:');
+    console.log('  Content-Type:', req.headers['content-type']);
+    console.log('  Method:', req.method);
+  }
+  next();
+});
+
+// Configure body parsers to skip multipart/form-data (handled by multer)
+app.use(express.json({
+  limit: '10mb',
+  type: function (req) {
+    const contentType = req.headers['content-type'] || '';
+    // Only parse if content-type is application/json AND not multipart
+    return contentType.includes('application/json') && !contentType.includes('multipart');
+  }
+}));
+
+app.use(express.urlencoded({
+  extended: true,
+  limit: '10mb',
+  type: function (req) {
+    const contentType = req.headers['content-type'] || '';
+    // Only parse if content-type is urlencoded AND not multipart
+    return contentType.includes('application/x-www-form-urlencoded') && !contentType.includes('multipart');
+  }
+}));
 
 // ============================================
 // AUTH MIDDLEWARE
@@ -147,9 +174,27 @@ app.get('/', (req, res) => {
     status: 'running',
     environment: process.env.NODE_ENV || 'development',
     endpoints: {
+      // Interview Endpoints
       'POST /api/interview/start': 'Initialize a new interview session',
       'POST /api/interview/next': 'Process next step in interview',
       'GET /api/interview/report': 'Get final interview report (query param: sessionId)',
+
+      // Dashboard Endpoints
+      'GET /api/dashboard/stats': 'Get user dashboard statistics',
+      'GET /api/dashboard/sessions': 'Get user session history (paginated)',
+      'GET /api/dashboard/profile': 'Get user profile and preferences',
+
+      // Profile Management Endpoints
+      'PUT /api/dashboard/profile': 'Update user profile information',
+      'POST /api/dashboard/profile/avatar': 'Upload user avatar image',
+      'GET /api/dashboard/profile/notifications': 'Get notification preferences',
+      'PUT /api/dashboard/profile/notifications': 'Update notification preferences',
+      'GET /api/dashboard/profile/connected-accounts': 'Get connected OAuth accounts',
+      'POST /api/dashboard/profile/password': 'Change user password',
+      'POST /api/dashboard/profile/export': 'Export all user data as JSON',
+      'DELETE /api/dashboard/profile': 'Delete user account (soft delete)',
+
+      // Health Check
       'GET /health': 'Health check endpoint'
     },
     rateLimit: {
@@ -169,8 +214,11 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Mount interview routes
+// Mount routes
+const dashboardRoutes = require('./routes/dashboard.routes');
+
 app.use('/api/interview', interviewRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // ============================================
 // ERROR HANDLERS

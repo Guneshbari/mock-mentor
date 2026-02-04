@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 interface SessionItemProps {
     type: string;
     date: string;
-    score: number;
+    score: number | null;
     sessionId?: string;
 }
 
@@ -39,9 +39,15 @@ export function SessionItem({ type, date, score, sessionId }: SessionItemProps) 
                 </div>
             </div>
 
-            <div className={`px-3 py-1.5 rounded-full text-sm font-semibold ${getScoreColor(score)}`}>
-                {score}%
-            </div>
+            {score !== null ? (
+                <div className={`px-3 py-1.5 rounded-full text-sm font-semibold ${getScoreColor(score)}`}>
+                    {score}%
+                </div>
+            ) : (
+                <div className="px-3 py-1.5 rounded-full text-sm font-semibold text-muted-foreground bg-muted">
+                    N/A
+                </div>
+            )}
         </div>
     );
 }

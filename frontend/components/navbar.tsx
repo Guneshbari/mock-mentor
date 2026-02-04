@@ -1,10 +1,19 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, LogOut, LayoutDashboard, User, Settings, MessageSquare, History } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function Navbar() {
     const { theme, setTheme } = useTheme();
@@ -94,26 +103,69 @@ export function Navbar() {
                         {loading ? (
                             <div className="w-20 h-8 animate-pulse bg-muted rounded flex-shrink-0" />
                         ) : user ? (
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                                <span className="text-sm font-medium hidden sm:inline-block">
-                                    {user.email?.split('@')[0]}
-                                </span>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={async () => {
-                                        const supabase = createClient();
-                                        await supabase.auth.signOut();
-                                        setUser(null);
-                                        window.location.href = "/";
-                                    }}
-                                >
-                                    Logout
-                                </Button>
-                                <Button asChild size="sm">
-                                    <a href="/dashboard">Dashboard</a>
-                                </Button>
-                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-transparent hover:ring-primary/20">
+                                        <Avatar className="h-9 w-9 border border-border bg-muted">
+                                            <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email || "User"} />
+                                            <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                                                {user.email?.charAt(0).toUpperCase() || "U"}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-56" align="end" side="bottom" sideOffset={10} forceMount>
+                                    <DropdownMenuLabel className="font-normal">
+                                        <div className="flex flex-col space-y-1">
+                                            <p className="text-sm font-medium leading-none">
+                                                {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                                            </p>
+                                            <p className="text-xs leading-none text-muted-foreground">
+                                                {user.email}
+                                            </p>
+                                        </div>
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem asChild>
+                                        <a href="/dashboard" className="cursor-pointer flex w-full items-center">
+                                            <LayoutDashboard className="mr-2 h-4 w-4" />
+                                            <span>Dashboard</span>
+                                        </a>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <a href="/dashboard?tab=sessions" className="cursor-pointer flex w-full items-center">
+                                            <History className="mr-2 h-4 w-4" />
+                                            <span>Sessions</span>
+                                        </a>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <a href="/dashboard?tab=profile" className="cursor-pointer flex w-full items-center">
+                                            <User className="mr-2 h-4 w-4" />
+                                            <span>Profile</span>
+                                        </a>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem asChild>
+                                        <a href="/interview-setup" className="cursor-pointer flex w-full items-center">
+                                            <MessageSquare className="mr-2 h-4 w-4" />
+                                            <span>Start Interview</span>
+                                        </a>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                        onClick={async () => {
+                                            const supabase = createClient();
+                                            await supabase.auth.signOut();
+                                            setUser(null);
+                                            window.location.href = "/";
+                                        }}
+                                        className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/20"
+                                    >
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        <span>Log out</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         ) : (
                             <div className="flex items-center gap-2 flex-shrink-0">
                                 <Button asChild variant="ghost" size="sm">

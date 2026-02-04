@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { AchievementBadge } from "@/components/dashboard/achievement-badge";
 import { ProfileSection } from "@/components/dashboard/profile-section";
 import { SessionsSection } from "@/components/dashboard/sessions-section";
 import { useTheme } from "next-themes";
+import { getDashboardStats, getSessionHistory, type DashboardStats, type Session } from "@/lib/api/dashboard";
 import {
     Play,
     Target,
@@ -23,15 +24,32 @@ import {
     History,
     Lightbulb,
     Sun,
-    Moon
+    Moon,
+    LogOut
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function DashboardPage() {
     const { theme, setTheme } = useTheme();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<"dashboard" | "sessions" | "profile">("dashboard");
+
+    // Dashboard data state
+    const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+    const [recentSessions, setRecentSessions] = useState<Session[]>([]);
+    const [dataLoading, setDataLoading] = useState(true);
+    const [dataError, setDataError] = useState<string | null>(null);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -48,7 +66,41 @@ export default function DashboardPage() {
         };
 
         checkAuth();
-    }, [router]);
+
+        // Check URL parameters for tab
+        const tabParam = searchParams.get('tab');
+        if (tabParam && ['dashboard', 'sessions', 'profile'].includes(tabParam)) {
+            setActiveTab(tabParam as "dashboard" | "sessions" | "profile");
+        }
+    }, [router, searchParams]);
+
+    // Fetch dashboard data
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            if (!user) return;
+
+            try {
+                setDataLoading(true);
+                setDataError(null);
+
+                // Fetch stats and recent sessions in parallel
+                const [stats, sessionsData] = await Promise.all([
+                    getDashboardStats(),
+                    getSessionHistory({ limit: 5, sortBy: 'date' })
+                ]);
+
+                setDashboardStats(stats);
+                setRecentSessions(sessionsData.sessions);
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+                setDataError(error instanceof Error ? error.message : 'Failed to load dashboard data');
+            } finally {
+                setDataLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, [user]);
 
     if (loading) {
         return (
@@ -60,15 +112,22 @@ export default function DashboardPage() {
 
     const userName = user?.user_metadata?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "User";
 
-    // Mock data - will be replaced with real data later
-    const stats = [
+    // Convert dashboard stats to stat cards
+    const formatTime = (minutes: number) => {
+        if (minutes === 0) return "0h";
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    };
+
+    const stats = dashboardStats ? [
         {
             icon: Target,
             iconColor: "text-primary",
             iconBgColor: "oklch(0.52 0.14 240)",
             label: "Sessions Completed",
-            value: 12,
-            subtitle: "+3 this week",
+            value: dashboardStats.totalSessions,
+            subtitle: dataLoading ? "Loading..." : "Total sessions",
             delay: 0,
         },
         {
@@ -76,8 +135,8 @@ export default function DashboardPage() {
             iconColor: "text-blue-600",
             iconBgColor: "oklch(0.60 0.18 250)",
             label: "Average Score",
-            value: "85%",
-            subtitle: "+5% improvement",
+            value: dataLoading ? "--" : `${dashboardStats.averageScore}%`,
+            subtitle: dataLoading ? "Loading..." : (dashboardStats.recentTrend > 0 ? `+${dashboardStats.recentTrend}% improvement` : dashboardStats.recentTrend < 0 ? `${dashboardStats.recentTrend}% decline` : "No change"),
             delay: 100,
         },
         {
@@ -85,38 +144,20 @@ export default function DashboardPage() {
             iconColor: "text-purple-600",
             iconBgColor: "oklch(0.60 0.18 290)",
             label: "Total Practice Time",
-            value: "4.5h",
-            subtitle: "This month",
+            value: dataLoading ? "--" : formatTime(dashboardStats.totalTime),
+            subtitle: "All time",
             delay: 200,
         },
         {
             icon: Award,
             iconColor: "text-amber-600",
             iconBgColor: "oklch(0.72 0.16 75)",
-            label: "Achievements",
-            value: 8,
-            subtitle: "2 new",
+            label: "Best Score",
+            value: dataLoading ? "--" : `${dashboardStats.bestScore}%`,
+            subtitle: "Personal best",
             delay: 300,
         },
-    ];
-
-    const recentSessions = [
-        {
-            type: "Technical Interview",
-            date: "Jan 26, 2026",
-            score: 88,
-        },
-        {
-            type: "Behavioral Questions",
-            date: "Jan 24, 2026",
-            score: 92,
-        },
-        {
-            type: "Case Study",
-            date: "Jan 22, 2026",
-            score: 79,
-        },
-    ];
+    ] : [];
 
     const goals = [
         {
@@ -149,7 +190,7 @@ export default function DashboardPage() {
                 <div className="w-full px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 gap-3">
                         {/* Logo */}
-                        <a href="/dashboard" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0">
+                        <a href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0">
                             <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
                                 <span className="text-primary-foreground font-bold text-sm">M</span>
                             </div>
@@ -189,7 +230,6 @@ export default function DashboardPage() {
                             </Button>
                         </div>
 
-                        {/* User Actions */}
                         <div className="flex items-center gap-2 flex-shrink-0">
                             <Button
                                 variant="ghost"
@@ -204,20 +244,42 @@ export default function DashboardPage() {
                                     <Moon className="h-4 w-4" />
                                 )}
                             </Button>
-                            <span className="text-sm font-medium hidden md:inline-block text-muted-foreground">
-                                {user.email?.split('@')[0]}
-                            </span>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={async () => {
-                                    const supabase = createClient();
-                                    await supabase.auth.signOut();
-                                    router.push("/");
-                                }}
-                            >
-                                Log Out
-                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-transparent hover:ring-primary/20">
+                                        <Avatar className="h-9 w-9 border border-border bg-muted">
+                                            <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email || "User"} />
+                                            <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                                                {user.email?.charAt(0).toUpperCase() || "U"}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-56" align="end" side="bottom" sideOffset={10} forceMount>
+                                    <DropdownMenuLabel className="font-normal">
+                                        <div className="flex flex-col space-y-1">
+                                            <p className="text-sm font-medium leading-none">
+                                                {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                                            </p>
+                                            <p className="text-xs leading-none text-muted-foreground">
+                                                {user.email}
+                                            </p>
+                                        </div>
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                        onClick={async () => {
+                                            const supabase = createClient();
+                                            await supabase.auth.signOut();
+                                            router.push("/");
+                                        }}
+                                        className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/20"
+                                    >
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        <span>Log out</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </div>
                 </div>

@@ -57,6 +57,12 @@ Data persistence and authentication are powered by **Supabase**, offering a seam
 - **Modern Components**: Built with **Shadcn/UI**, **Tailwind CSS**, and **Framer Motion**.
 - **Theme Support**: Beautiful light and dark modes.
 
+### 🛡️ Account Management
+- **Profile Control**: Update profile details and avatar.
+- **Privacy Focused**: Full control over your data with **Hard Delete** (permanent account deletion).
+- **Session History**: Detailed logs of all past interview sessions.
+
+
 ---
 
 ## 🏗️ Architecture

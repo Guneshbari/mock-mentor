@@ -22,7 +22,8 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
-    "groq-sdk": "*"
+    "groq-sdk": "*",
+    "multer": "^2.0.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.0"

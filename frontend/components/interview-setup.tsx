@@ -448,7 +448,7 @@ export function InterviewSetupForm({ onStartInterview }: InterviewSetupFormProps
                 placeholder="Paste your resume or provide a brief summary of your experience and background..."
                 value={resumeText}
                 onChange={(e) => setResumeText(e.target.value)}
-                className="min-h-[280px] lg:min-h-[443px] resize-none"
+                className="min-h-[280px] lg:min-h-[442px] resize-none"
               />
             </CardContent>
           </Card>

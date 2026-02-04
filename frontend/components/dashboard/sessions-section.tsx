@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,77 +20,68 @@ import {
     Search,
     Play,
     Download,
-    Filter
+    Filter,
+    Loader2
 } from "lucide-react";
-
-// Mock data - will be replaced with real data from backend
-const mockSessions = [
-    {
-        id: "1",
-        type: "Technical Interview",
-        role: "Software Engineer",
-        date: "2026-01-26",
-        duration: "25 min",
-        score: 88,
-        questions: 5,
-        status: "completed",
-    },
-    {
-        id: "2",
-        type: "Behavioral Questions",
-        role: "Product Manager",
-        date: "2026-01-24",
-        duration: "30 min",
-        score: 92,
-        questions: 6,
-        status: "completed",
-    },
-    {
-        id: "3",
-        type: "Case Study",
-        role: "Business Analyst",
-        date: "2026-01-22",
-        duration: "45 min",
-        score: 79,
-        questions: 3,
-        status: "completed",
-    },
-    {
-        id: "4",
-        type: "Technical Interview",
-        role: "Frontend Developer",
-        date: "2026-01-20",
-        duration: "28 min",
-        score: 85,
-        questions: 5,
-        status: "completed",
-    },
-    {
-        id: "5",
-        type: "Behavioral Questions",
-        role: "Software Engineer",
-        date: "2026-01-18",
-        duration: "22 min",
-        score: 91,
-        questions: 4,
-        status: "completed",
-    },
-    {
-        id: "6",
-        type: "Technical Interview",
-        role: "Backend Developer",
-        date: "2026-01-15",
-        duration: "32 min",
-        score: 76,
-        questions: 6,
-        status: "completed",
-    },
-];
+import { getSessionHistory, type Session, type DashboardStats } from "@/lib/api/dashboard";
+import { getDashboardStats } from "@/lib/api/dashboard";
+import { formatSessionDate, getRelativeTime } from "@/lib/utils/timezone";
 
 export function SessionsSection() {
     const [searchQuery, setSearchQuery] = useState("");
     const [filterType, setFilterType] = useState("all");
-    const [sortBy, setSortBy] = useState("recent");
+    const [sortBy, setSortBy] = useState<"date" | "score">("date");
+
+    // Data state
+    const [sessions, setSessions] = useState<Session[]>([]);
+    const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [pagination, setPagination] = useState({ total: 0, limit: 10, offset: 0, hasMore: false });
+
+    // Fetch sessions with current filters
+    const fetchSessions = async (offset = 0) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const [sessionsData, statsData] = await Promise.all([
+                getSessionHistory({
+                    limit: pagination.limit,
+                    offset,
+                    sortBy,
+                    filterType: filterType !== "all" ? filterType : undefined,
+                    search: searchQuery || undefined
+                }),
+                stats ? Promise.resolve(stats) : getDashboardStats()
+            ]);
+
+            setSessions(sessionsData.sessions);
+            setPagination(sessionsData.pagination);
+            if (!stats) setStats(statsData);
+        } catch (err) {
+            console.error('Error fetching sessions:', err);
+            setError(err instanceof Error ? err.message : 'Failed to load sessions');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Initial load and refetch on filter changes
+    useEffect(() => {
+        fetchSessions(0);
+    }, [sortBy, filterType]);
+
+    // Debounced search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchQuery !== undefined) {
+                fetchSessions(0);
+            }
+        }, 500); // 500ms debounce
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     const getScoreColor = (score: number) => {
         if (score >= 85) return "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20";
@@ -98,44 +89,27 @@ export function SessionsSection() {
         return "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20";
     };
 
+    // Format date in IST timezone
     const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-        });
+        return formatSessionDate(dateString);
     };
 
-    const filteredSessions = mockSessions
-        .filter((session) => {
-            const matchesSearch =
-                session.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                session.role.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesType = filterType === "all" || session.type === filterType;
-            return matchesSearch && matchesType;
-        })
-        .sort((a, b) => {
-            if (sortBy === "recent") {
-                return new Date(b.date).getTime() - new Date(a.date).getTime();
-            }
-            if (sortBy === "score") {
-                return b.score - a.score;
-            }
-            return 0;
-        });
-
-    // Calculate statistics
-    const totalSessions = mockSessions.length;
-    const averageScore = Math.round(
-        mockSessions.reduce((sum, s) => sum + s.score, 0) / mockSessions.length
-    );
-    const totalTime = mockSessions.reduce((sum, s) => {
-        const minutes = parseInt(s.duration);
-        return sum + minutes;
-    }, 0);
+    // Calculate statistics from API data
+    const totalSessions = stats?.totalSessions || 0;
+    const averageScore = stats?.averageScore || 0;
+    const totalTime = stats?.totalTime || 0;
     const hours = Math.floor(totalTime / 60);
     const minutes = totalTime % 60;
+    const bestScore = stats?.bestScore || 0;
+
+    const formatSessionType = (type: string) => {
+        switch (type.toLowerCase()) {
+            case 'hr': return 'HR Interview';
+            case 'technical': return 'Technical Interview';
+            case 'behavioral': return 'Behavioral Interview';
+            default: return type.charAt(0).toUpperCase() + type.slice(1);
+        }
+    };
 
     return (
         <div className="space-y-6 pb-16">
@@ -204,7 +178,7 @@ export function SessionsSection() {
                             <div>
                                 <p className="text-sm text-muted-foreground">Best Score</p>
                                 <p className="text-2xl font-bold">
-                                    {Math.max(...mockSessions.map((s) => s.score))}%
+                                    {bestScore}%
                                 </p>
                             </div>
                         </div>
@@ -235,19 +209,22 @@ export function SessionsSection() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Types</SelectItem>
-                                <SelectItem value="Technical Interview">Technical</SelectItem>
-                                <SelectItem value="Behavioral Questions">Behavioral</SelectItem>
-                                <SelectItem value="Case Study">Case Study</SelectItem>
+                                <SelectItem value="technical">Technical</SelectItem>
+                                <SelectItem value="behavioral">Behavioral</SelectItem>
+                                <SelectItem value="hr">HR</SelectItem>
                             </SelectContent>
                         </Select>
 
                         {/* Sort */}
-                        <Select value={sortBy} onValueChange={setSortBy}>
+                        <Select
+                            value={sortBy}
+                            onValueChange={(value) => setSortBy(value as "date" | "score")}
+                        >
                             <SelectTrigger className="w-full sm:w-48">
                                 <SelectValue placeholder="Sort by" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="recent">Most Recent</SelectItem>
+                                <SelectItem value="date">Most Recent</SelectItem>
                                 <SelectItem value="score">Highest Score</SelectItem>
                             </SelectContent>
                         </Select>
@@ -257,8 +234,22 @@ export function SessionsSection() {
 
             {/* Sessions List */}
             <div className="space-y-4 animate-fade-up" style={{ animationDelay: "200ms" }}>
-                {filteredSessions.length > 0 ? (
-                    filteredSessions.map((session, index) => (
+                {loading ? (
+                    <Card>
+                        <CardContent className="flex flex-col items-center justify-center h-64 text-center p-6">
+                            <Loader2 className="h-16 w-16 text-muted-foreground/30 mb-4 animate-spin" />
+                            <p className="text-muted-foreground">Loading sessions...</p>
+                        </CardContent>
+                    </Card>
+                ) : error ? (
+                    <Card>
+                        <CardContent className="flex flex-col items-center justify-center h-64 text-center p-6">
+                            <p className="text-destructive mb-2">Error loading sessions</p>
+                            <p className="text-sm text-muted-foreground">{error}</p>
+                        </CardContent>
+                    </Card>
+                ) : sessions.length > 0 ? (
+                    sessions.map((session, index) => (
                         <Card
                             key={session.id}
                             className="group hover:shadow-md transition-all duration-200 hover:border-primary/30"
@@ -270,23 +261,27 @@ export function SessionsSection() {
                                     <div className="flex-1 space-y-3">
                                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                                             <h3 className="text-lg font-semibold text-foreground">
-                                                {session.type}
+                                                {formatSessionType(session.type)}
                                             </h3>
                                             <Badge variant="secondary" className="w-fit">
                                                 {session.role}
                                             </Badge>
-                                            <Badge
-                                                variant="outline"
-                                                className={`w-fit ${getScoreColor(session.score)}`}
-                                            >
-                                                Score: {session.score}%
-                                            </Badge>
+                                            {session.score !== null && (
+                                                <Badge
+                                                    variant="outline"
+                                                    className={`w-fit ${getScoreColor(session.score)}`}
+                                                >
+                                                    Score: {session.score}%
+                                                </Badge>
+                                            )}
                                         </div>
 
                                         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                                             <div className="flex items-center gap-1.5">
                                                 <Calendar className="h-4 w-4" />
-                                                {formatDate(session.date)}
+                                                <span title={formatDate(session.date)}>
+                                                    {getRelativeTime(session.date)}
+                                                </span>
                                             </div>
                                             <div className="flex items-center gap-1.5">
                                                 <Clock className="h-4 w-4" />
@@ -319,20 +314,22 @@ export function SessionsSection() {
                     ))
                 ) : (
                     <Card>
-                        <CardContent className="flex flex-col items-center justify-center h-64 text-center">
+                        <CardContent className="flex flex-col items-center justify-center h-64 text-center p-6">
                             <Search className="h-16 w-16 text-muted-foreground/30 mb-4" />
-                            <p className="text-muted-foreground">
-                                No sessions found matching your criteria
-                            </p>
+                            <p className="text-muted-foreground">No sessions found</p>
                         </CardContent>
                     </Card>
                 )}
             </div>
 
             {/* Load More */}
-            {filteredSessions.length > 0 && (
+            {!loading && sessions.length > 0 && pagination.hasMore && (
                 <div className="flex justify-center pt-4">
-                    <Button variant="outline" size="lg">
+                    <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => fetchSessions(pagination.offset + pagination.limit)}
+                    >
                         Load More Sessions
                     </Button>
                 </div>
