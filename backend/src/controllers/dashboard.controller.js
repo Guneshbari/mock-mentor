@@ -416,6 +416,99 @@ const changePassword = async (req, res) => {
     }
 };
 
+/**
+ * Get recent achievements
+ * GET /api/dashboard/achievements
+ */
+async function getAchievements(req, res) {
+    try {
+        const userId = req.userId;
+
+        if (!userId) {
+            return res.status(401).json({
+                error: 'Unauthorized',
+                message: 'User ID not found in request'
+            });
+        }
+
+        const limit = parseInt(req.query.limit) || 5;
+
+        // Check and award any new achievements first
+        await dashboardService.checkAndAwardAchievements(userId);
+
+        // Get recent achievements
+        const achievements = await dashboardService.getRecentAchievements(userId, limit);
+
+        return res.status(200).json({
+            success: true,
+            data: achievements
+        });
+
+    } catch (error) {
+        console.error('Error in getAchievements controller:', error);
+        return res.status(500).json({
+            error: 'Internal server error',
+            message: 'Failed to fetch achievements'
+        });
+    }
+}
+
+/**
+ * Get random pro tips
+ * GET /api/dashboard/pro-tips
+ */
+async function getProTips(req, res) {
+    try {
+        const count = parseInt(req.query.count) || 3;
+        const category = req.query.category || null;
+
+        const tips = await dashboardService.getRandomProTips(count, category);
+
+        return res.status(200).json({
+            success: true,
+            data: tips
+        });
+
+    } catch (error) {
+        console.error('Error in getProTips controller:', error);
+        return res.status(500).json({
+            error: 'Internal server error',
+            message: 'Failed to fetch pro tips'
+        });
+    }
+}
+
+/**
+ * Get goals performance trend
+ * GET /api/dashboard/goals/performance
+ */
+async function getGoalsPerformanceTrend(req, res) {
+    try {
+        const userId = req.userId;
+
+        if (!userId) {
+            return res.status(401).json({
+                error: 'Unauthorized',
+                message: 'User ID not found in request'
+            });
+        }
+
+        const performanceData = await dashboardService.getGoalsPerformanceTrend(userId);
+
+        return res.status(200).json({
+            success: true,
+            data: performanceData
+        });
+
+    } catch (error) {
+        console.error('Error in getGoalsPerformanceTrend controller:', error);
+        return res.status(500).json({
+            error: 'Internal server error',
+            message: 'Failed to fetch goals performance data'
+        });
+    }
+}
+
 module.exports = {
     getStatistics,
     getSessionHistory,
@@ -428,5 +521,8 @@ module.exports = {
     deleteAccount,
     hardDeleteAccount,
     getConnectedAccounts,
-    changePassword
+    changePassword,
+    getAchievements,
+    getProTips,
+    getGoalsPerformanceTrend
 };

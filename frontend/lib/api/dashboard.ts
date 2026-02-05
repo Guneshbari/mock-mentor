@@ -51,6 +51,38 @@ export interface UserProfile {
     };
 }
 
+export interface Goal {
+    goal: string;
+    progress: number;
+    current: number;
+    target: number;
+    type: string;
+}
+
+export interface Achievement {
+    id: string;
+    title: string;
+    description: string;
+    icon: string;
+    earned_at: string;
+}
+
+export interface ProTip {
+    id: string;
+    tip_text: string;
+    category: string;
+}
+
+export interface GoalsData {
+    goals: Goal[];
+    onboardingGoals: string[];
+    performanceTrend: Array<{
+        week: string;
+        averageScore: number;
+        sessionCount: number;
+    }>;
+}
+
 /**
  * Get dashboard statistics for the current user
  */
@@ -128,6 +160,82 @@ export async function getUserProfile(): Promise<UserProfile> {
     if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to fetch user profile');
+    }
+
+    const data = await response.json();
+    return data.data;
+}
+
+/**
+ * Get user goals and performance trend
+ */
+export async function getGoalsData(): Promise<GoalsData> {
+    const { getAuthHeaders } = await import('@/lib/auth-headers');
+    const headers = await getAuthHeaders();
+
+    const response = await fetch('http://localhost:8000/api/dashboard/goals/performance', {
+        method: 'GET',
+        headers,
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch goals data');
+    }
+
+    const data = await response.json();
+    return data.data;
+}
+
+/**
+ * Get user achievements
+ */
+export async function getAchievements(limit?: number): Promise<Achievement[]> {
+    const { getAuthHeaders } = await import('@/lib/auth-headers');
+    const headers = await getAuthHeaders();
+
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit.toString());
+
+    const queryString = params.toString();
+    const url = `http://localhost:8000/api/dashboard/achievements${queryString ? `?${queryString}` : ''}`;
+
+    const response = await fetch(url, {
+        method: 'GET',
+        headers,
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch achievements');
+    }
+
+    const data = await response.json();
+    return data.data;
+}
+
+/**
+ * Get random pro tips
+ */
+export async function getProTips(count?: number, category?: string): Promise<ProTip[]> {
+    const { getAuthHeaders } = await import('@/lib/auth-headers');
+    const headers = await getAuthHeaders();
+
+    const params = new URLSearchParams();
+    if (count) params.append('count', count.toString());
+    if (category) params.append('category', category);
+
+    const queryString = params.toString();
+    const url = `http://localhost:8000/api/dashboard/pro-tips${queryString ? `?${queryString}` : ''}`;
+
+    const response = await fetch(url, {
+        method: 'GET',
+        headers,
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch pro tips');
     }
 
     const data = await response.json();

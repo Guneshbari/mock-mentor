@@ -12,7 +12,7 @@ import { AchievementBadge } from "@/components/dashboard/achievement-badge";
 import { ProfileSection } from "@/components/dashboard/profile-section";
 import { SessionsSection } from "@/components/dashboard/sessions-section";
 import { useTheme } from "next-themes";
-import { getDashboardStats, getSessionHistory, type DashboardStats, type Session } from "@/lib/api/dashboard";
+import { getDashboardStats, getSessionHistory, getGoalsData, getAchievements, getProTips, type DashboardStats, type Session, type Goal, type Achievement, type ProTip, type GoalsData } from "@/lib/api/dashboard";
 import {
     Play,
     Target,
@@ -48,6 +48,10 @@ function DashboardContent() {
     // Dashboard data state
     const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
     const [recentSessions, setRecentSessions] = useState<Session[]>([]);
+    const [goals, setGoals] = useState<Goal[]>([]);
+    const [achievements, setAchievements] = useState<Achievement[]>([]);
+    const [proTip, setProTip] = useState<ProTip | null>(null);
+    const [performanceTrend, setPerformanceTrend] = useState<GoalsData["performanceTrend"]>([]);
     const [dataLoading, setDataLoading] = useState(true);
     const [dataError, setDataError] = useState<string | null>(null);
 
@@ -83,14 +87,46 @@ function DashboardContent() {
                 setDataLoading(true);
                 setDataError(null);
 
-                // Fetch stats and recent sessions in parallel
-                const [stats, sessionsData] = await Promise.all([
+                // Fetch stats, recent sessions, goals, achievements, and pro tips in parallel
+                const [stats, sessionsData, goalsData, achievementsData, proTipsData] = await Promise.all([
                     getDashboardStats(),
-                    getSessionHistory({ limit: 5, sortBy: 'date' })
+                    getSessionHistory({ limit: 5, sortBy: 'date' }),
+                    getGoalsData(),
+                    getAchievements(3),
+                    getProTips(1)
                 ]);
 
                 setDashboardStats(stats);
                 setRecentSessions(sessionsData.sessions);
+                setAchievements(achievementsData);
+                setProTip(proTipsData[0] || null);
+                setPerformanceTrend(goalsData.performanceTrend);
+
+                // Calculate goals progress based on actual user stats
+                const calculatedGoals: Goal[] = [
+                    {
+                        goal: "Complete 15 practice sessions",
+                        progress: Math.min(100, Math.round((stats.totalSessions / 15) * 100)),
+                        current: stats.totalSessions,
+                        target: 15,
+                        type: "sessions"
+                    },
+                    {
+                        goal: "Master behavioral questions",
+                        progress: Math.min(100, Math.round((stats.totalSessions / 10) * 60)), // Approximation based on sessions
+                        current: Math.min(stats.totalSessions, 10),
+                        target: 10,
+                        type: "practice"
+                    },
+                    {
+                        goal: "Achieve 90% average score",
+                        progress: Math.min(100, Math.round((stats.averageScore / 90) * 100)),
+                        current: stats.averageScore,
+                        target: 90,
+                        type: "score"
+                    }
+                ];
+                setGoals(calculatedGoals);
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
                 setDataError(error instanceof Error ? error.message : 'Failed to load dashboard data');
@@ -159,29 +195,7 @@ function DashboardContent() {
         },
     ] : [];
 
-    const goals = [
-        {
-            goal: "Complete 15 practice sessions",
-            progress: 80,
-            delay: 0,
-        },
-        {
-            goal: "Master behavioral questions",
-            progress: 60,
-            delay: 100,
-        },
-        {
-            goal: "Achieve 90% average score",
-            progress: 45,
-            delay: 200,
-        },
-    ];
 
-    const achievements = [
-        { icon: "🎯", name: "First Session" },
-        { icon: "🔥", name: "10 Sessions" },
-        { icon: "⭐", name: "Perfect Score" },
-    ];
 
     return (
         <div className="min-h-screen bg-background">
@@ -359,26 +373,67 @@ function DashboardContent() {
                                     <CardDescription>Track your progress</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
-                                    {goals.map((goal, index) => (
-                                        <GoalProgress key={index} {...goal} />
-                                    ))}
+                                    {dataLoading ? (
+                                        <div className="text-sm text-muted-foreground">Loading goals...</div>
+                                    ) : goals.length > 0 ? (
+                                        goals.map((goal, index) => (
+                                            <GoalProgress key={index} goal={goal.goal} progress={goal.progress} delay={index * 100} />
+                                        ))
+                                    ) : (
+                                        <div className="text-sm text-muted-foreground">No active goals. Complete some sessions to track your progress!</div>
+                                    )}
                                 </CardContent>
                             </Card>
                         </div>
 
                         {/* Bottom Grid */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            {/* Performance Trend Placeholder */}
+                            {/* Performance Trend */}
                             <Card className="lg:col-span-2 animate-fade-up" style={{ animationDelay: "300ms" }}>
                                 <CardHeader>
                                     <CardTitle>Performance Trend</CardTitle>
                                     <CardDescription>Your progress over the last 30 days</CardDescription>
                                 </CardHeader>
-                                <CardContent className="flex items-center justify-center h-48">
-                                    <div className="text-center">
-                                        <TrendingUp className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                                        <p className="text-sm text-muted-foreground">Chart visualization</p>
-                                    </div>
+                                <CardContent>
+                                    {dataLoading ? (
+                                        <div className="flex items-center justify-center h-48">
+                                            <div className="text-center">
+                                                <TrendingUp className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4 animate-pulse" />
+                                                <p className="text-sm text-muted-foreground">Loading...</p>
+                                            </div>
+                                        </div>
+                                    ) : performanceTrend.length > 0 ? (
+                                        <div className="space-y-4">
+                                            {performanceTrend.map((week, index) => (
+                                                <div key={index} className="space-y-2">
+                                                    <div className="flex justify-between items-center text-sm">
+                                                        <span className="text-muted-foreground">
+                                                            Week of {new Date(week.week).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                        </span>
+                                                        <div className="flex items-center gap-4">
+                                                            <span className="text-muted-foreground">
+                                                                {week.sessionCount} {week.sessionCount === 1 ? 'session' : 'sessions'}
+                                                            </span>
+                                                            <span className="font-semibold">{week.averageScore}%</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="w-full bg-muted rounded-full h-2">
+                                                        <div
+                                                            className="bg-primary rounded-full h-2 transition-all"
+                                                            style={{ width: `${week.averageScore}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-center h-48">
+                                            <div className="text-center">
+                                                <TrendingUp className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+                                                <p className="text-sm text-muted-foreground">No performance data yet. Complete some sessions to see your trend!</p>
+                                            </div>
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
 
@@ -390,9 +445,15 @@ function DashboardContent() {
                                         <CardTitle>Recent Achievements</CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-2">
-                                        {achievements.map((achievement, index) => (
-                                            <AchievementBadge key={index} {...achievement} />
-                                        ))}
+                                        {dataLoading ? (
+                                            <div className="text-sm text-muted-foreground">Loading achievements...</div>
+                                        ) : achievements.length > 0 ? (
+                                            achievements.map((achievement, index) => (
+                                                <AchievementBadge key={index} icon={achievement.icon} name={achievement.title} />
+                                            ))
+                                        ) : (
+                                            <div className="text-sm text-muted-foreground">No achievements yet. Keep practicing to earn your first badge!</div>
+                                        )}
                                     </CardContent>
                                 </Card>
 
@@ -405,9 +466,17 @@ function DashboardContent() {
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                        <p className="text-sm text-amber-800 dark:text-amber-200">
-                                            Practice for 15-20 minutes daily for best results. Consistency is key to improving your interview skills!
-                                        </p>
+                                        {dataLoading ? (
+                                            <p className="text-sm text-amber-800 dark:text-amber-200">Loading tip...</p>
+                                        ) : proTip ? (
+                                            <p className="text-sm text-amber-800 dark:text-amber-200">
+                                                {proTip.tip_text}
+                                            </p>
+                                        ) : (
+                                            <p className="text-sm text-amber-800 dark:text-amber-200">
+                                                Practice for 15-20 minutes daily for best results. Consistency is key to improving your interview skills!
+                                            </p>
+                                        )}
                                     </CardContent>
                                 </Card>
                             </div>

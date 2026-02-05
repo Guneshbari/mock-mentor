@@ -51,4 +51,13 @@ router.delete('/profile', dashboardController.deleteAccount);
 // DELETE /api/dashboard/profile/permanent - Hard delete user account
 router.delete('/profile/permanent', dashboardController.hardDeleteAccount);
 
+// GET /api/dashboard/achievements - Get recent achievements
+router.get('/achievements', dashboardController.getAchievements);
+
+// GET /api/dashboard/pro-tips - Get random pro tips
+router.get('/pro-tips', dashboardController.getProTips);
+
+// GET /api/dashboard/goals/performance - Get goals performance trend
+router.get('/goals/performance', dashboardController.getGoalsPerformanceTrend);
+
 module.exports = router;
