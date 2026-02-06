@@ -42,13 +42,28 @@ async function startInterview(interviewConfig, userId = null) {
   // Determine dynamic total rounds based on role and skills
   const initialTotalRounds = aiService.determineTotalRounds(tempState);
 
+  // Fetch candidate name from DB if authenticated
+  let candidateName = interviewConfig.candidateName || '';
+  if (userId && !candidateName) {
+    try {
+      const profile = await databaseService.getUserProfile(userId);
+      if (profile) {
+        candidateName = profile.full_name || profile.name || '';
+      }
+    } catch (err) {
+      console.warn('Failed to fetch candidate name for interview:', err);
+    }
+  }
+
   // Initialize interview state
   const interviewState = {
     sessionId,
+    userId, // Store userId for later use in completion handlers
     interviewConfig: {
       interviewType: interviewConfig.interviewType,
       role: interviewConfig.role,
       skills: interviewConfig.skills || [],
+      candidateName: candidateName, // Injected name
       resumeText: interviewConfig.resumeText || '',
     },
     currentStep: 1,
@@ -90,6 +105,13 @@ async function startInterview(interviewConfig, userId = null) {
         interviewState.questionIds[1] = questionData.id;
         setSession(sessionId, interviewState);
       }
+
+      // Log activity
+      await databaseService.logActivity(userId, 'session_start');
+
+      // Ensure user goals are populated
+      await databaseService.ensureUserGoals(userId);
+
     } catch (dbError) {
       console.error('Database save failed, continuing with in-memory only:', dbError);
     }
@@ -198,8 +220,30 @@ async function processNextStep(sessionId, previousAnswerText) {
     // Update session status to completed
     try {
       await databaseService.updateSessionStatus(interviewState.sessionId, 'completed');
+
+      // Save final report to database
+      if (interviewState.finalReport) {
+        await databaseService.saveSessionReport(interviewState.sessionId, interviewState.finalReport);
+
+        // Populate user data: Activity, Progress, Skills
+        // We need userId here. Ideally it should be in interviewState, but we can query session or pass it.
+        // For now, we'll try to get it from the session object if we stored it, or fetch from DB.
+        // Actually, let's store userId in memory session state at startInterview to make this easy.
+        // Assuming interviewState.userId exists (we need to add it in startInterview)
+        if (interviewState.userId) {
+          await databaseService.logActivity(interviewState.userId, 'session_end');
+          await databaseService.updateUserProgress(interviewState.userId);
+          if (interviewState.interviewConfig?.role) {
+            await databaseService.updateUserSkills(
+              interviewState.userId,
+              interviewState.interviewConfig.role,
+              interviewState.finalReport.overallScore || 0
+            );
+          }
+        }
+      }
     } catch (dbError) {
-      console.error('Failed to update session status:', dbError);
+      console.error('Failed to update session status or save report:', dbError);
     }
 
     // Update session

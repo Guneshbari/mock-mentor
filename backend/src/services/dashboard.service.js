@@ -25,7 +25,7 @@ async function getUserStatistics(userId) {
         // Get all completed sessions for the user
         const { data: sessions, error: sessionsError } = await supabase
             .from('sessions')
-            .select('id, started_at, ended_at')
+            .select('id, started_at, ended_at, overall_score')
             .eq('user_id', userId)
             .eq('status', 'completed')
             .order('started_at', { ascending: false });
@@ -47,23 +47,20 @@ async function getUserStatistics(userId) {
 
         const sessionIds = sessions.map(s => s.id);
 
-        // Get all feedback scores for these sessions
-        const { data: feedbackData, error: feedbackError } = await supabase
-            .from('feedback')
-            .select('score, session_id')
-            .in('session_id', sessionIds);
 
-        if (feedbackError) {
-            console.error('Error fetching feedback:', feedbackError);
-        }
+        // Feedback data no longer needed for aggregated stats with overall_score column
+
 
         // Calculate statistics
-        const scores = feedbackData?.map(f => f.score) || [];
         const totalSessions = sessions.length;
-        const averageScore = scores.length > 0
-            ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+
+        // Calculate average score using overall_score from sessions table
+        const validScores = sessions.filter(s => s.overall_score !== null && s.overall_score !== undefined).map(s => s.overall_score);
+        const averageScore = validScores.length > 0
+            ? Math.round(validScores.reduce((sum, score) => sum + score, 0) / validScores.length)
             : 0;
-        const bestScore = scores.length > 0 ? Math.max(...scores) : 0;
+
+        const bestScore = validScores.length > 0 ? Math.max(...validScores) : 0;
 
         // Calculate total time (difference between started_at and ended_at)
         const totalMinutes = sessions.reduce((total, session) => {
@@ -78,32 +75,16 @@ async function getUserStatistics(userId) {
 
         // Calculate recent trend (last 5 sessions vs previous 5)
         let recentTrend = 0;
-        if (feedbackData && feedbackData.length >= 10) {
-            // Group scores by session
-            const sessionScores = {};
-            feedbackData.forEach(f => {
-                if (!sessionScores[f.session_id]) {
-                    sessionScores[f.session_id] = [];
-                }
-                sessionScores[f.session_id].push(f.score);
-            });
+        if (validScores.length >= 10) {
+            // Sort valid sessions by date (most recent first)
+            const sortedSessions = sessions
+                .filter(s => s.overall_score !== null)
+                .sort((a, b) => new Date(b.started_at) - new Date(a.started_at));
 
-            // Calculate average score per session
-            const sessionAverages = Object.entries(sessionScores).map(([sessionId, scores]) => ({
-                sessionId,
-                avgScore: scores.reduce((sum, s) => sum + s, 0) / scores.length
-            }));
+            const recent5 = sortedSessions.slice(0, 5).reduce((sum, s) => sum + s.overall_score, 0) / 5;
+            const previous5 = sortedSessions.slice(5, 10).reduce((sum, s) => sum + s.overall_score, 0) / 5;
 
-            // Sort by session date
-            const sortedAverages = sessionAverages.sort((a, b) => {
-                const aIndex = sessions.findIndex(s => s.id === a.sessionId);
-                const bIndex = sessions.findIndex(s => s.id === b.sessionId);
-                return aIndex - bIndex; // Most recent first
-            });
-
-            if (sortedAverages.length >= 10) {
-                const recent5 = sortedAverages.slice(0, 5).reduce((sum, s) => sum + s.avgScore, 0) / 5;
-                const previous5 = sortedAverages.slice(5, 10).reduce((sum, s) => sum + s.avgScore, 0) / 5;
+            if (previous5 > 0) {
                 recentTrend = Math.round(((recent5 - previous5) / previous5) * 100);
             }
         }
@@ -200,27 +181,20 @@ async function getSessionHistory(userId, options = {}) {
             console.error('Error fetching questions for history:', questionError);
         }
 
-        // Get feedback for these sessions to calculate scores
-        const { data: feedbackData, error: feedbackError } = await supabase
-            .from('feedback')
-            .select('session_id, score')
-            .in('session_id', sessionIds);
 
-        if (feedbackError) {
-            console.error('Error fetching feedback for history:', feedbackError);
-        }
+        // Feedback fetch removed - using overall_score from sessions table
+
 
         // Aggregate data per session
         let enrichedSessions = sessions.map(session => {
-            const sessionFeedback = feedbackData?.filter(f => f.session_id === session.id) || [];
             const sessionQuestions = questionData?.filter(q => q.session_id === session.id) || [];
 
             // Get the interview type from the first question
             const firstQuestion = sessionQuestions.sort((a, b) => (a.order_index || 0) - (b.order_index || 0))[0];
             const interviewType = firstQuestion?.question_type || 'general';
 
-            const avgScore = sessionFeedback.length > 0
-                ? Math.round(sessionFeedback.reduce((sum, f) => sum + f.score, 0) / sessionFeedback.length)
+            const avgScore = session.overall_score !== null && session.overall_score !== undefined
+                ? session.overall_score
                 : null;
 
             const duration = session.ended_at && session.started_at
@@ -281,7 +255,7 @@ async function getUserProfile(userId) {
         // Get user basic info
         const { data: user, error: userError } = await supabase
             .from('users')
-            .select('id, email, name, profile_image_url, created_at')
+            .select('id, email, name, bio, profile_image_url, created_at')
             .eq('id', userId)
             .single();
 
@@ -316,6 +290,7 @@ async function getUserProfile(userId) {
             id: user.id,
             email: user.email,
             name: user.name || '',
+            bio: user.bio || '',
             avatar: user.profile_image_url || null,
             createdAt: user.created_at,
             preferences: preferences || {},
@@ -448,7 +423,7 @@ async function getGoalsPerformanceTrend(userId) {
 
         const { data: sessions, error: sessionsError } = await supabase
             .from('sessions')
-            .select('id, started_at, ended_at')
+            .select('id, started_at, ended_at, overall_score')
             .eq('user_id', userId)
             .eq('status', 'completed')
             .gte('started_at', thirtyDaysAgo.toISOString())
@@ -458,44 +433,31 @@ async function getGoalsPerformanceTrend(userId) {
             console.error('Error fetching sessions for trend:', sessionsError);
         }
 
-        // Get feedback scores for these sessions
+        // Calculate trend using overall_score from sessions
         let performanceTrend = [];
         if (sessions && sessions.length > 0) {
-            const sessionIds = sessions.map(s => s.id);
+            const weeklyScores = {};
+            sessions.forEach(session => {
+                if (session.overall_score !== null && session.overall_score !== undefined) {
+                    const weekStart = new Date(session.started_at);
+                    weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of week
+                    const weekKey = weekStart.toISOString().split('T')[0];
 
-            const { data: feedbackData, error: feedbackError } = await supabase
-                .from('feedback')
-                .select('session_id, score, created_at')
-                .in('session_id', sessionIds);
-
-            if (feedbackError) {
-                console.error('Error fetching feedback for trend:', feedbackError);
-            } else if (feedbackData) {
-                // Group scores by week
-                const weeklyScores = {};
-                feedbackData.forEach(feedback => {
-                    const session = sessions.find(s => s.id === feedback.session_id);
-                    if (session) {
-                        const weekStart = new Date(session.started_at);
-                        weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of week
-                        const weekKey = weekStart.toISOString().split('T')[0];
-
-                        if (!weeklyScores[weekKey]) {
-                            weeklyScores[weekKey] = [];
-                        }
-                        weeklyScores[weekKey].push(feedback.score);
+                    if (!weeklyScores[weekKey]) {
+                        weeklyScores[weekKey] = [];
                     }
-                });
+                    weeklyScores[weekKey].push(session.overall_score);
+                }
+            });
 
-                // Calculate average score per week
-                performanceTrend = Object.entries(weeklyScores)
-                    .map(([week, scores]) => ({
-                        week,
-                        averageScore: Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length),
-                        sessionCount: scores.length
-                    }))
-                    .sort((a, b) => a.week.localeCompare(b.week));
-            }
+            // Calculate average score per week
+            performanceTrend = Object.entries(weeklyScores)
+                .map(([week, scores]) => ({
+                    week,
+                    averageScore: Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length),
+                    sessionCount: scores.length
+                }))
+                .sort((a, b) => a.week.localeCompare(b.week));
         }
 
         return {
@@ -619,6 +581,136 @@ async function checkAndAwardAchievements(userId) {
     }
 }
 
+/**
+ * Get detailed session information including questions, responses, and feedback
+ * @param {string} userId - User UUID
+ * @param {string} sessionId - Session UUID
+ * @returns {Promise<object>} Detailed session data
+ */
+async function getSessionDetail(userId, sessionId) {
+    if (!supabase) {
+        console.warn('Supabase not configured. Returning null.');
+        return null;
+    }
+
+    try {
+        // Get session basic info
+        const { data: session, error: sessionError } = await supabase
+            .from('sessions')
+            .select('*, overall_score')
+            .eq('id', sessionId)
+            .eq('user_id', userId) // Ensure user owns this session
+            .single();
+
+        if (sessionError) {
+            if (sessionError.code === 'PGRST116') {
+                // Session not found or doesn't belong to user
+                return null;
+            }
+            console.error('Error fetching session detail:', sessionError);
+            throw sessionError;
+        }
+
+        // Get all questions for this session
+        const { data: questions, error: questionsError } = await supabase
+            .from('session_questions')
+            .select('*')
+            .eq('session_id', sessionId)
+            .order('order_index', { ascending: true });
+
+        if (questionsError) {
+            console.error('Error fetching questions:', questionsError);
+            throw questionsError;
+        }
+
+        // Get all responses for this session
+        const { data: responses, error: responsesError } = await supabase
+            .from('responses')
+            .select('*')
+            .eq('session_id', sessionId);
+
+        if (responsesError) {
+            console.error('Error fetching responses:', responsesError);
+            throw responsesError;
+        }
+
+        // Get all feedback for this session
+        const { data: feedback, error: feedbackError } = await supabase
+            .from('feedback')
+            .select('*')
+            .eq('session_id', sessionId);
+
+        if (feedbackError) {
+            console.error('Error fetching feedback:', feedbackError);
+            throw feedbackError;
+        }
+
+        // Calculate session duration
+        const duration = session.ended_at && session.started_at
+            ? Math.round((new Date(session.ended_at) - new Date(session.started_at)) / (1000 * 60))
+            : null;
+
+        // Calculate average score
+        // Prioritize overall_score from session table if available
+        let avgScore = session.overall_score;
+
+        if (avgScore === null || avgScore === undefined) {
+            const scores = feedback?.map(f => f.score) || [];
+            avgScore = scores.length > 0
+                ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
+                : null;
+        }
+
+        // Enrich questions with responses and feedback
+        const enrichedQuestions = (questions || []).map(question => {
+            const questionResponse = responses?.find(r => r.question_id === question.id);
+            const questionFeedback = feedback?.find(f => f.question_id === question.id);
+
+            return {
+                id: question.id,
+                text: question.question_text,
+                type: question.question_type,
+                orderIndex: question.order_index,
+                response: questionResponse ? {
+                    text: questionResponse.response_text,
+                    duration: questionResponse.response_duration,
+                    createdAt: questionResponse.created_at
+                } : null,
+                feedback: questionFeedback ? {
+                    score: questionFeedback.score,
+                    strengths: questionFeedback.strengths || [],
+                    improvements: questionFeedback.improvements || [],
+                    confidenceScore: questionFeedback.confidence_score
+                } : null
+            };
+        });
+
+        return {
+            id: session.id,
+            type: enrichedQuestions[0]?.type || 'general',
+            role: session.skill_focus,
+            difficulty: session.difficulty,
+            date: session.started_at,
+            duration: duration ? `${duration} min` : 'N/A',
+            score: avgScore,
+            status: session.status,
+            questions: enrichedQuestions,
+            metadata: {
+                sessionType: session.session_type,
+                startedAt: session.started_at,
+                endedAt: session.ended_at,
+                totalQuestions: questions?.length || 0,
+                totalResponses: responses?.length || 0,
+                totalFeedback: feedback?.length || 0
+            }
+        };
+
+    } catch (error) {
+        console.error('Failed to fetch session detail:', error);
+        throw error;
+    }
+}
+
 module.exports = {
     getUserStatistics,
     getSessionHistory,
@@ -626,5 +718,6 @@ module.exports = {
     getRecentAchievements,
     getRandomProTips,
     getGoalsPerformanceTrend,
-    checkAndAwardAchievements
+    checkAndAwardAchievements,
+    getSessionDetail
 };

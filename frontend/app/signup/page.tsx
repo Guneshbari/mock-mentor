@@ -62,6 +62,7 @@ export default function SignupPage() {
                 options: {
                     data: {
                         full_name: fullName,
+                        name: fullName, // Added for compatibility with some triggers/OAuth patterns
                     },
                 },
             });

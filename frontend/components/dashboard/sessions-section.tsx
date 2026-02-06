@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
     Select,
     SelectContent,
@@ -23,7 +24,7 @@ import {
     Filter,
     Loader2
 } from "lucide-react";
-import { getSessionHistory, type Session, type DashboardStats } from "@/lib/api/dashboard";
+import { getSessionHistory, getSessionDetail, type Session, type SessionDetail, type DashboardStats } from "@/lib/api/dashboard";
 import { getDashboardStats } from "@/lib/api/dashboard";
 import { formatSessionDate, getRelativeTime } from "@/lib/utils/timezone";
 
@@ -38,6 +39,11 @@ export function SessionsSection() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [pagination, setPagination] = useState({ total: 0, limit: 10, offset: 0, hasMore: false });
+
+    // Session detail modal state
+    const [selectedSession, setSelectedSession] = useState<SessionDetail | null>(null);
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [loadingDetail, setLoadingDetail] = useState(false);
 
     // Fetch sessions with current filters
     const fetchSessions = async (offset = 0) => {
@@ -82,6 +88,43 @@ export function SessionsSection() {
 
         return () => clearTimeout(timer);
     }, [searchQuery]);
+
+    // Handle session review
+    const handleReviewSession = async (sessionId: string) => {
+        try {
+            setLoadingDetail(true);
+            const sessionDetail = await getSessionDetail(sessionId);
+            setSelectedSession(sessionDetail);
+            setShowReviewModal(true);
+        } catch (err) {
+            console.error('Error fetching session details:', err);
+            setError('Failed to load session details');
+        } finally {
+            setLoadingDetail(false);
+        }
+    };
+
+    // Handle session download
+    const handleDownloadSession = async (sessionId: string) => {
+        try {
+            const sessionDetail = await getSessionDetail(sessionId);
+
+            // Create JSON blob and download
+            const dataStr = JSON.stringify(sessionDetail, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `session-${sessionId}-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Error downloading session:', err);
+            setError('Failed to download session');
+        }
+    };
 
     const getScoreColor = (score: number) => {
         if (score >= 85) return "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20";
@@ -300,11 +343,22 @@ export function SessionsSection() {
                                             variant="outline"
                                             size="sm"
                                             className="gap-2 group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                                            onClick={() => handleReviewSession(session.id)}
+                                            disabled={loadingDetail}
                                         >
-                                            <Play className="h-4 w-4" />
+                                            {loadingDetail && selectedSession?.id === session.id ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <Play className="h-4 w-4" />
+                                            )}
                                             <span className="hidden sm:inline">Review</span>
                                         </Button>
-                                        <Button variant="ghost" size="icon-sm">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon-sm"
+                                            onClick={() => handleDownloadSession(session.id)}
+                                            title="Download Details"
+                                        >
                                             <Download className="h-4 w-4" />
                                         </Button>
                                     </div>
@@ -334,6 +388,94 @@ export function SessionsSection() {
                     </Button>
                 </div>
             )}
+            {/* Session Review Modal */}
+            <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
+                <DialogContent className="max-w-[90vw] w-[1200px] sm:max-w-[90vw] max-h-[90vh] overflow-y-auto pt-12">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-2xl">
+                            {selectedSession?.role} Interview Review
+                            {selectedSession?.score && (
+                                <Badge variant={selectedSession.score >= 70 ? "default" : "secondary"}>
+                                    Score: {selectedSession.score}%
+                                </Badge>
+                            )}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {selectedSession && formatSessionDate(selectedSession.date)} • {selectedSession?.duration} • {selectedSession?.difficulty}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-6 mt-4 w-full">
+                        {/* Overall Feedback Summary if available could go here */}
+
+                        <div className="space-y-6 w-full">
+                            {selectedSession?.questions?.map((question, index) => (
+                                <Card key={question.id} className="w-full border-l-4 border-l-primary/20">
+                                    <CardHeader className="pb-2">
+                                        <div className="flex justify-between items-start">
+                                            <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                                                Question {index + 1}
+                                            </div>
+                                            {question.feedback?.score && (
+                                                <Badge variant="outline" className={
+                                                    question.feedback.score >= 80 ? "text-green-600 border-green-200 bg-green-50" :
+                                                        question.feedback.score >= 60 ? "text-amber-600 border-amber-200 bg-amber-50" :
+                                                            "text-red-600 border-red-200 bg-red-50"
+                                                }>
+                                                    {question.feedback.score}/100
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <h3 className="text-lg font-semibold">{question.text}</h3>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="bg-muted/30 p-4 rounded-lg space-y-2">
+                                            <div className="text-xs font-medium text-muted-foreground uppercase flex items-center gap-1">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+                                                Your Response
+                                            </div>
+                                            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                                                {question.response?.text || <span className="text-muted-foreground italic">No response recorded</span>}
+                                            </p>
+                                        </div>
+
+                                        {question.feedback && (
+                                            <div className="space-y-3 pt-2">
+                                                <div className="grid gap-3 sm:grid-cols-2">
+                                                    {question.feedback.strengths?.length > 0 && (
+                                                        <div className="space-y-2">
+                                                            <div className="text-xs font-medium text-green-600 flex items-center gap-1">
+                                                                <TrendingUp className="h-3 w-3" /> Strengths
+                                                            </div>
+                                                            <ul className="text-sm space-y-1 list-disc list-inside">
+                                                                {question.feedback.strengths.map((s, i) => (
+                                                                    <li key={i} className="text-muted-foreground">{s}</li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                    {question.feedback.improvements?.length > 0 && (
+                                                        <div className="space-y-2">
+                                                            <div className="text-xs font-medium text-amber-600 flex items-center gap-1">
+                                                                <TrendingUp className="h-3 w-3 rotate-180" /> Improvements
+                                                            </div>
+                                                            <ul className="text-sm space-y-1 list-disc list-inside">
+                                                                {question.feedback.improvements.map((s, i) => (
+                                                                    <li key={i} className="text-muted-foreground">{s}</li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

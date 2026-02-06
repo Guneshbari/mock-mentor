@@ -1,10 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 import { CheckCircle2, ArrowRight, Zap, Briefcase, BrainCircuit, LineChart, Github, Star, CheckCircle } from "lucide-react";
 
 export function Hero() {
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const checkUser = async () => {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+        };
+        checkUser();
+    }, []);
+
     return (
         <section className="relative pt-32 pb-16 md:pt-48 md:pb-32 overflow-hidden">
             <div className="container-responsive relative z-10 text-center">
@@ -18,9 +31,11 @@ export function Hero() {
                     <Button asChild size="lg" className="w-full sm:w-auto text-lg h-12 px-8">
                         <Link href="/dashboard">Get Started Free <ArrowRight className="ml-2 h-5 w-5" /></Link>
                     </Button>
-                    <Button asChild variant="outline" size="lg" className="w-full sm:w-auto text-lg h-12 px-8">
-                        <Link href="/login">Login</Link>
-                    </Button>
+                    {!user && (
+                        <Button asChild variant="outline" size="lg" className="w-full sm:w-auto text-lg h-12 px-8">
+                            <Link href="/login">Login</Link>
+                        </Button>
+                    )}
                 </div>
             </div>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-primary/10 rounded-full blur-3xl -z-10 opacity-50 pointer-events-none" />

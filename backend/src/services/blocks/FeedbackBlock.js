@@ -102,14 +102,20 @@ IMPORTANT:
                     answer: h.answer,
                     summary: h.answer.length > 100 ? `${h.answer.substring(0, 97)}...` : h.answer,
                     score: h.evaluation?.score || 0,
-                    key_feedback: h.evaluation?.feedback || 'No feedback available'
+                    key_feedback: h.evaluation?.feedback || 'No feedback available',
+                    strengths: h.evaluation?.strengths || [],
+                    improvements: h.evaluation?.improvements || []
                 }));
             } else {
                 // Ensure each history item has a score
                 report.questionAnswerHistory = report.questionAnswerHistory.map((item, i) => ({
                     ...item,
                     score: history[i]?.evaluation?.score || item.score || 0,
-                    key_feedback: item.key_feedback || history[i]?.evaluation?.feedback || 'No feedback'
+                    key_feedback: item.key_feedback || history[i]?.evaluation?.feedback || 'No feedback',
+                    strengths: history[i]?.evaluation?.strengths || [],
+                    improvements: history[i]?.evaluation?.improvements || [],
+                    confidence_score: history[i]?.evaluation?.breakdown?.confidence ||
+                        (history[i]?.evaluation?.breakdown ? Math.round((history[i].evaluation.breakdown.depth + history[i].evaluation.breakdown.completeness) / 2) : 0)
                 }));
             }
 

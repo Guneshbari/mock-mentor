@@ -244,6 +244,33 @@ async function getSessionQuestions(sessionId) {
 }
 
 /**
+ * Get user profile details
+ * @param {string} userId - User UUID
+ * @returns {Promise<object>} User profile
+ */
+async function getUserProfile(userId) {
+    if (!supabase) return null;
+
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('full_name, name')
+            .eq('id', userId)
+            .single();
+
+        if (error) {
+            console.error('Error fetching user profile:', error);
+            return null;
+        }
+
+        return data;
+    } catch (error) {
+        console.error('Failed to get user profile:', error);
+        return null;
+    }
+}
+
+/**
  * Save or update user preferences
  * @param {string} userId - User UUID
  * @param {object} preferences - User preferences object
@@ -295,6 +322,264 @@ async function saveUserPreferences(userId, preferences) {
     }
 }
 
+/**
+ * Save final interview report to database
+ * @param {string} sessionId - Session UUID
+ * @param {object} reportData - The full final report object
+ * @returns {Promise<object>} Updated session
+ */
+async function saveSessionReport(sessionId, reportData) {
+    if (!supabase) {
+        console.warn('Supabase not configured. Skipping report save.');
+        return null;
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('sessions')
+            .update({
+                final_report: reportData,
+                overall_score: reportData.overallScore || 0,
+                updated_at: new Date().toISOString() // Ensure we track when this happened
+            })
+            .eq('id', sessionId)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error saving session report:', error);
+            throw error;
+        }
+
+        console.log(`Report saved for session ${sessionId}`);
+
+        // --- POPULATE FEEDBACK TABLE ---
+        if (reportData.questionAnswerHistory && reportData.questionAnswerHistory.length > 0) {
+            try {
+                // 1. Get session questions to map to question IDs
+                const { data: questions, error: qError } = await supabase
+                    .from('session_questions')
+                    .select('id, order_index')
+                    .eq('session_id', sessionId)
+                    .order('order_index');
+
+                if (qError) throw qError;
+
+                if (questions && questions.length > 0) {
+                    const feedbackInserts = [];
+
+                    // Map history items to questions by index
+                    // Assuming questionAnswerHistory is in same order as questions
+                    reportData.questionAnswerHistory.forEach((item, index) => {
+                        const question = questions[index];
+                        if (question) {
+                            // Normalize strengths/improvements to arrays if they aren't already
+                            const strengths = Array.isArray(item.strengths) ? item.strengths :
+                                (item.strengths ? [item.strengths] : []);
+
+                            const improvements = Array.isArray(item.improvements) ? item.improvements :
+                                (item.improvements ? [item.improvements] : []);
+
+                            feedbackInserts.push({
+                                session_id: sessionId,
+                                question_id: question.id,
+                                score: item.score || 0,
+                                strengths: strengths,
+                                improvements: improvements,
+                                confidence_score: item.confidence_score || 0,
+                                created_at: new Date().toISOString()
+                            });
+                        }
+                    });
+
+                    if (feedbackInserts.length > 0) {
+                        const { error: fError } = await supabase
+                            .from('feedback')
+                            .insert(feedbackInserts);
+
+                        if (fError) console.error('Error inserting feedback rows:', fError);
+                        else console.log(`Inserted ${feedbackInserts.length} feedback rows for session ${sessionId}`);
+                    }
+                }
+            } catch (fbError) {
+                console.error('Failed to populate feedback table:', fbError);
+                // Don't fail the whole function if feedback insertion fails
+            }
+        }
+
+        return data;
+    } catch (error) {
+        console.error('Failed to save session report:', error);
+        return null;
+    }
+}
+
+/**
+ * Log user activity
+ * @param {string} userId - User UUID
+ * @param {string} action - Activity type (e.g., 'session_start', 'session_end')
+ * @returns {Promise<void>}
+ */
+async function logActivity(userId, action) {
+    if (!supabase) return;
+
+    try {
+        await supabase
+            .from('user_activity')
+            .insert({
+                user_id: userId,
+                action: action,
+                timestamp: new Date().toISOString()
+            });
+    } catch (error) {
+        console.error('Failed to log activity:', error);
+    }
+}
+
+/**
+ * Update user progress statistics
+ * @param {string} userId - User UUID
+ * @returns {Promise<void>}
+ */
+async function updateUserProgress(userId) {
+    if (!supabase) return;
+
+    try {
+        // Calculate aggregate stats
+        const { count, error: countError } = await supabase
+            .from('sessions')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .eq('status', 'completed');
+
+        if (countError) throw countError;
+
+        // Get average score
+        const { data: sessions } = await supabase
+            .from('sessions')
+            .select('overall_score')
+            .eq('user_id', userId)
+            .eq('status', 'completed')
+            .not('overall_score', 'is', null);
+
+        let avgScore = 0;
+        if (sessions && sessions.length > 0) {
+            const sum = sessions.reduce((acc, s) => acc + (s.overall_score || 0), 0);
+            avgScore = Math.round(sum / sessions.length);
+        }
+
+        // Update progress table
+        await supabase
+            .from('user_progress')
+            .upsert({
+                user_id: userId,
+                total_sessions: count || 0,
+                average_score: avgScore,
+                last_session_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            });
+
+    } catch (error) {
+        console.error('Failed to update user progress:', error);
+    }
+}
+
+/**
+ * Update user skills confidence
+ * @param {string} userId - User UUID
+ * @param {string} skillName - Name of the skill/role
+ * @param {number} sessionScore - Score from the session
+ * @returns {Promise<void>}
+ */
+async function updateUserSkills(userId, skillName, sessionScore) {
+    if (!supabase || !skillName) return;
+
+    try {
+        // 1. Get or create skill
+        let skillId;
+        const { data: existingSkill } = await supabase
+            .from('skills')
+            .select('id')
+            .ilike('name', skillName)
+            .single();
+
+        if (existingSkill) {
+            skillId = existingSkill.id;
+        } else {
+            const { data: newSkill } = await supabase
+                .from('skills')
+                .insert({ name: skillName, category: 'Technical' }) // Default category
+                .select()
+                .single();
+            if (newSkill) skillId = newSkill.id;
+        }
+
+        if (!skillId) return;
+
+        // 2. Calculate new confidence level (mock logic: 1-10 scale based on score)
+        // Map 0-100 score to 1-10 confidence
+        const newConfidence = Math.max(1, Math.min(10, Math.round(sessionScore / 10)));
+
+        // 3. Upsert user_skill
+        await supabase
+            .from('user_skills')
+            .upsert({
+                user_id: userId,
+                skill_id: skillId,
+                confidence_level: newConfidence
+            });
+
+    } catch (error) {
+        console.error('Failed to update user skills:', error);
+    }
+}
+
+/**
+ * Ensure user goals exist (sync from onboarding if empty)
+ * @param {string} userId - User UUID
+ * @returns {Promise<void>}
+ */
+async function ensureUserGoals(userId) {
+    if (!supabase) return;
+
+    try {
+        // Check if goals exist
+        const { count, error } = await supabase
+            .from('user_goals')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId);
+
+        if (error) throw error;
+
+        // If no goals, sync from onboarding
+        if (count === 0) {
+            const { data: onboarding } = await supabase
+                .from('onboarding_responses')
+                .select('goals')
+                .eq('user_id', userId)
+                .single();
+
+            if (onboarding && onboarding.goals && Array.isArray(onboarding.goals)) {
+                const goalsToInsert = onboarding.goals.map(goal => ({
+                    user_id: userId,
+                    description: goal, // Assuming 'description' column based on standard practice
+                    status: 'active',
+                    created_at: new Date().toISOString()
+                }));
+
+                if (goalsToInsert.length > 0) {
+                    await supabase
+                        .from('user_goals')
+                        .insert(goalsToInsert);
+                    console.log(`Synced ${goalsToInsert.length} goals from onboarding for user ${userId}`);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Failed to ensure user goals:', error);
+    }
+}
+
 module.exports = {
     createSession,
     saveQuestion,
@@ -303,4 +588,10 @@ module.exports = {
     updateSessionStatus,
     getSessionQuestions,
     saveUserPreferences,
+    saveSessionReport,
+    getUserProfile,
+    logActivity,
+    updateUserProgress,
+    updateUserSkills,
+    ensureUserGoals,
 };

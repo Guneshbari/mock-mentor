@@ -68,8 +68,8 @@ Return JSON with this exact structure:
     "clarity": <score 0-100>
   },
   "feedback": "<2-3 sentence feedback focusing on their knowledge of ${expectedTopic}>",
-  "strengths": "<specific strong points>",
-  "improvements": "<what was missing regarding ${expectedTopic}>"
+  "strengths": ["<strong point 1>", "<strong point 2>"],
+  "improvements": ["<missing point 1>", "<improvement area 1>"]
 }`;
 
         const userPrompt = `Question: ${question}\n\nCandidate's Answer: ${answer}`;
@@ -100,8 +100,8 @@ Return JSON with this exact structure:
                 score: 50,
                 feedback: "Error evaluating response.",
                 breakdown: { completeness: 50, technicalAccuracy: 50, depth: 50, clarity: 50 },
-                strengths: "Unable to analyze",
-                improvements: "Please try again"
+                strengths: ["Unable to analyze"],
+                improvements: ["Please try again"]
             };
         }
     }

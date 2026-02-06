@@ -21,6 +21,9 @@ router.get('/stats', dashboardController.getStatistics);
 // GET /api/dashboard/sessions - Get session history with pagination
 router.get('/sessions', dashboardController.getSessionHistory);
 
+// GET /api/dashboard/sessions/:sessionId - Get detailed session information
+router.get('/sessions/:sessionId', dashboardController.getSessionDetail);
+
 // GET /api/dashboard/profile - Get user profile and preferences
 router.get('/profile', dashboardController.getUserProfile);
 

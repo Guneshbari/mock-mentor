@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Spinner } from "@/components/ui/spinner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { ChevronDown, ChevronUp, Mic, MicOff, User, Bot, Sparkles, Volume2, VolumeX, Square, RotateCcw, TrendingUp, CheckCircle2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Mic, MicOff, User, Bot, Sparkles, Volume2, VolumeX, Square, RotateCcw, TrendingUp, CheckCircle2, X } from "lucide-react";
 import type { InterviewConfiguration } from "./interview-setup";
 
 interface QuestionAudio {
@@ -81,7 +81,20 @@ export function InterviewSessionPanel({
   const [isMemoryPanelOpen, setIsMemoryPanelOpen] = useState(true);
   const [questionAnswerHistory, setQuestionAnswerHistory] = useState<
     { question: string; answer: string; summary: string; score?: number }[]
-  >([]);
+  >(() => {
+    // Try to load from session storage on initialization
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem(`interviewHistory_${interviewConfig.sessionId}`);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error("Failed to parse history", e);
+        }
+      }
+    }
+    return [];
+  });
 
   // Restart confirmation dialog
   const [showRestartDialog, setShowRestartDialog] = useState(false);
@@ -138,12 +151,22 @@ export function InterviewSessionPanel({
     window.speechSynthesis.speak(utterance);
   }, [isAudioModeEnabled]);
 
+  // Persist history to session storage
+  useEffect(() => {
+    if (interviewConfig.sessionId) {
+      sessionStorage.setItem(
+        `interviewHistory_${interviewConfig.sessionId}`,
+        JSON.stringify(questionAnswerHistory)
+      );
+    }
+  }, [questionAnswerHistory, interviewConfig.sessionId]);
+
   // Speak initial question if audio mode is enabled
   useEffect(() => {
-    if (isAudioModeEnabled && currentStep === 1 && questionAudio) {
+    if (isAudioModeEnabled && currentStep === 1 && questionAudio && questionAnswerHistory.length === 0) {
       speakQuestion(questionAudio.text, questionAudio.speechParams);
     }
-  }, [isAudioModeEnabled, currentStep, questionAudio, speakQuestion]);
+  }, [isAudioModeEnabled, currentStep, questionAudio, speakQuestion, questionAnswerHistory.length]);
 
   // Stop speaking
   const stopSpeaking = () => {
@@ -546,6 +569,15 @@ export function InterviewSessionPanel({
                     <RotateCcw className="h-4 w-4 mr-1.5" />
                     Restart
                   </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.location.href = '/dashboard'}
+                    className="text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
+                  >
+                    <X className="h-4 w-4 mr-1.5" />
+                    Close
+                  </Button>
                 </div>
               </div>
             </CardHeader>
@@ -805,11 +837,6 @@ export function InterviewSessionPanel({
                               <Badge variant="secondary" className="text-xs font-bold bg-primary/10 text-primary">
                                 Q{index + 1}
                               </Badge>
-                              {item.score && (
-                                <Badge variant="outline" className="text-xs">
-                                  {item.score}/100
-                                </Badge>
-                              )}
                             </div>
                             <p className="text-sm text-foreground font-semibold line-clamp-2">
                               {item.question}

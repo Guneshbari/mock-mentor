@@ -77,7 +77,9 @@ create table public.sessions (
   difficulty text,
   status text check (status in ('in_progress', 'completed', 'abandoned')) default 'in_progress',
   started_at timestamptz default now(),
-  ended_at timestamptz
+  ended_at timestamptz,
+  final_report jsonb,      -- Store the complete JSON report
+  overall_score integer    -- Store overall score for quick sorting/filtering
 );
 
 -- 5. SESSION QUESTIONS

@@ -509,9 +509,56 @@ async function getGoalsPerformanceTrend(req, res) {
     }
 }
 
+/**
+ * Get detailed session information
+ * GET /api/dashboard/sessions/:sessionId
+ */
+async function getSessionDetail(req, res) {
+    try {
+        const userId = req.userId;
+        const sessionId = req.params.sessionId;
+
+        if (!userId) {
+            return res.status(401).json({
+                error: 'Unauthorized',
+                message: 'User ID not found in request'
+            });
+        }
+
+        if (!sessionId) {
+            return res.status(400).json({
+                error: 'Bad request',
+                message: 'Session ID is required'
+            });
+        }
+
+        const sessionDetail = await dashboardService.getSessionDetail(userId, sessionId);
+
+        if (!sessionDetail) {
+            return res.status(404).json({
+                error: 'Not found',
+                message: 'Session not found or access denied'
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: sessionDetail
+        });
+
+    } catch (error) {
+        console.error('Error in getSessionDetail controller:', error);
+        return res.status(500).json({
+            error: 'Internal server error',
+            message: 'Failed to fetch session details'
+        });
+    }
+}
+
 module.exports = {
     getStatistics,
     getSessionHistory,
+    getSessionDetail,
     getUserProfile,
     updateProfile,
     uploadAvatar,

@@ -372,7 +372,7 @@ export function ProfileSection({ user }: { user: any }) {
                                 id="fullName"
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
-                                placeholder="John Doe"
+                                placeholder=""
                             />
                         </div>
                         <div className="space-y-2">
@@ -382,7 +382,7 @@ export function ProfileSection({ user }: { user: any }) {
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="john.doe@example.com"
+                                placeholder=""
                             />
                         </div>
                     </div>
@@ -394,7 +394,7 @@ export function ProfileSection({ user }: { user: any }) {
                             id="bio"
                             value={bio}
                             onChange={(e) => setBio(e.target.value)}
-                            placeholder="Computer Science student preparing for technical interviews"
+                            placeholder=""
                             rows={4}
                             className="resize-none"
                         />

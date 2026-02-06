@@ -83,6 +83,42 @@ export interface GoalsData {
     }>;
 }
 
+export interface SessionDetail {
+    id: string;
+    type: string;
+    role: string;
+    difficulty: string;
+    date: string;
+    duration: string;
+    score: number | null;
+    status: string;
+    questions: Array<{
+        id: string;
+        text: string;
+        type: string;
+        orderIndex: number;
+        response: {
+            text: string;
+            duration: number | null;
+            createdAt: string;
+        } | null;
+        feedback: {
+            score: number;
+            strengths: string[];
+            improvements: string[];
+            confidenceScore: number | null;
+        } | null;
+    }>;
+    metadata: {
+        sessionType: string;
+        startedAt: string;
+        endedAt: string | null;
+        totalQuestions: number;
+        totalResponses: number;
+        totalFeedback: number;
+    };
+}
+
 /**
  * Get dashboard statistics for the current user
  */
@@ -236,6 +272,28 @@ export async function getProTips(count?: number, category?: string): Promise<Pro
     if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to fetch pro tips');
+    }
+
+    const data = await response.json();
+    return data.data;
+}
+
+/**
+ * Get detailed session information including questions, responses, and feedback
+ * @param sessionId The session ID to fetch details for
+ */
+export async function getSessionDetail(sessionId: string): Promise<SessionDetail> {
+    const { getAuthHeaders } = await import('@/lib/auth-headers');
+    const headers = await getAuthHeaders();
+
+    const response = await fetch(`http://localhost:8000/api/dashboard/sessions/${sessionId}`, {
+        method: 'GET',
+        headers,
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch session details');
     }
 
     const data = await response.json();
