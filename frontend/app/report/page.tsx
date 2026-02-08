@@ -46,12 +46,25 @@ export default function InterviewReportPage() {
 
         const data = await response.json();
 
-        // Check for specific error messages
+        // If backend returned an error shape, surface a friendly message
         if (!response.ok) {
-          if (data.error === 'Invalid sessionId' || data.error === 'Interview not completed yet') {
-            throw new Error(`Session expired or interview not completed. Please start a new interview.`);
+          const message = data?.error || 'Failed to fetch report';
+          if (message.toLowerCase().includes('not found') || message.toLowerCase().includes('session not found')) {
+            setError('No stored report was found for this session. Reports are saved for users after their first login.');
+          } else if (message.toLowerCase().includes('not yet generated') || message.toLowerCase().includes('not generated')) {
+            setError('The report for this session is not yet generated. Please try again later.');
+          } else {
+            setError(message);
           }
-          throw new Error(data.error || 'Failed to fetch report');
+          setIsLoading(false);
+          return;
+        }
+
+        // If backend returned but report is empty, show friendly message
+        if (!data?.finalReport) {
+          setError('No stored report was found for this session. Reports are saved for users after their first login.');
+          setIsLoading(false);
+          return;
         }
 
         setFinalReport(data.finalReport);
@@ -63,35 +76,10 @@ export default function InterviewReportPage() {
       } catch (err) {
         console.error('Error fetching report:', err);
         setError(err instanceof Error ? err.message : 'Failed to load report');
-        // Fallback: use mock data for now
-        setFinalReport({
-          overallScore: 78,
-          categoryScores: {
-            communication: 82,
-            clarity: 75,
-            technicalDepth: 80,
-            confidence: 74,
-          },
-          identifiedStrengths: [
-            "Clear articulation of technical concepts",
-            "Strong problem-solving approach demonstrated",
-            "Good use of specific examples from past experience",
-          ],
-          areasForImprovement: [
-            "Could provide more quantifiable results in examples",
-            "Consider structuring responses using STAR method",
-            "Expand on leadership and collaboration experiences",
-          ],
-          actionableFeedback: [
-            "Practice summarizing complex topics in 2-3 sentences",
-            "Prepare 3-5 specific project stories with measurable outcomes",
-            "Research common behavioral interview frameworks",
-          ],
-          questionAnswerHistory: [],
-        });
-      } finally {
         setIsLoading(false);
+        return;
       }
+      // finally handled above by explicit returns and state updates
     };
 
     fetchReport();
@@ -102,6 +90,13 @@ export default function InterviewReportPage() {
     sessionStorage.removeItem('interviewSession');
     sessionStorage.removeItem('reportSessionId');
     router.push('/interview-setup');
+  };
+
+  const handleGoToDashboard = () => {
+    // Clear session data
+    sessionStorage.removeItem('interviewSession');
+    sessionStorage.removeItem('reportSessionId');
+    router.push('/dashboard');
   };
 
   if (isLoading) {
@@ -148,6 +143,7 @@ export default function InterviewReportPage() {
         <InterviewReportSummary
           evaluationResults={finalReport}
           onRestartInterview={handleRestartInterview}
+          onGoToDashboard={handleGoToDashboard}
           audioSummary={audioSummary}
         />
       </main>

@@ -200,11 +200,20 @@ async function getFinalReport(req, res) {
   } catch (error) {
     console.error('Error in getFinalReport:', error);
 
-    if (error.message === 'Invalid sessionId' || error.message === 'Interview not completed yet') {
+    // Check for specific error messages
+    if (error.message.includes('not found')) {
+      return res.status(404).json({ error: 'Session not found. Please check the session ID.' });
+    }
+
+    if (error.message.includes('not yet generated')) {
       return res.status(400).json({ error: error.message });
     }
 
-    res.status(500).json({ error: 'Internal server error' });
+    if (error.message.includes('Invalid sessionId') || error.message.includes('Interview not completed')) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: 'Failed to fetch report: ' + error.message });
   }
 }
 

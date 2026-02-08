@@ -340,7 +340,7 @@ async function saveSessionReport(sessionId, reportData) {
             .update({
                 final_report: reportData,
                 overall_score: reportData.overallScore || 0,
-                updated_at: new Date().toISOString() // Ensure we track when this happened
+                updated_at: new Date().toISOString()
             })
             .eq('id', sessionId)
             .select()
@@ -351,10 +351,11 @@ async function saveSessionReport(sessionId, reportData) {
             throw error;
         }
 
-        console.log(`Report saved for session ${sessionId}`);
+        console.log(`[Database] Report saved for session ${sessionId}. Overall Score: ${reportData.overallScore}`);
 
         // --- POPULATE FEEDBACK TABLE ---
         if (reportData.questionAnswerHistory && reportData.questionAnswerHistory.length > 0) {
+            console.log(`[Database] Populating feedback for ${reportData.questionAnswerHistory.length} items`);
             try {
                 // 1. Get session questions to map to question IDs
                 const { data: questions, error: qError } = await supabase
@@ -363,17 +364,21 @@ async function saveSessionReport(sessionId, reportData) {
                     .eq('session_id', sessionId)
                     .order('order_index');
 
-                if (qError) throw qError;
+                if (qError) {
+                    console.error('[Database] Error fetching questions for feedback map:', qError);
+                    throw qError;
+                }
+
+                console.log(`[Database] Found ${questions?.length || 0} questions for session ${sessionId}`);
 
                 if (questions && questions.length > 0) {
                     const feedbackInserts = [];
 
                     // Map history items to questions by index
-                    // Assuming questionAnswerHistory is in same order as questions
                     reportData.questionAnswerHistory.forEach((item, index) => {
                         const question = questions[index];
+
                         if (question) {
-                            // Normalize strengths/improvements to arrays if they aren't already
                             const strengths = Array.isArray(item.strengths) ? item.strengths :
                                 (item.strengths ? [item.strengths] : []);
 
@@ -389,6 +394,8 @@ async function saveSessionReport(sessionId, reportData) {
                                 confidence_score: item.confidence_score || 0,
                                 created_at: new Date().toISOString()
                             });
+                        } else {
+                            console.warn(`[Database] No matching question found for history item ${index}`);
                         }
                     });
 
@@ -397,14 +404,24 @@ async function saveSessionReport(sessionId, reportData) {
                             .from('feedback')
                             .insert(feedbackInserts);
 
-                        if (fError) console.error('Error inserting feedback rows:', fError);
-                        else console.log(`Inserted ${feedbackInserts.length} feedback rows for session ${sessionId}`);
+                        if (fError) {
+                            console.error('[Database] Error inserting feedback rows:', fError);
+                            console.error('[Database] Feedback data that failed:', JSON.stringify(feedbackInserts, null, 2));
+                            throw fError;
+                        } else {
+                            console.log(`[Database] Successfully inserted ${feedbackInserts.length} feedback rows`);
+                        }
+                    } else {
+                        console.warn('[Database] No feedback inserts prepared (questions mismatch?)');
                     }
+                } else {
+                    console.warn('[Database] No questions found in DB to link feedback to');
                 }
             } catch (fbError) {
-                console.error('Failed to populate feedback table:', fbError);
-                // Don't fail the whole function if feedback insertion fails
+                console.error('[Database] Failed to populate feedback table:', fbError);
             }
+        } else {
+            console.warn('[Database] No questionAnswerHistory in reportData to populate feedback');
         }
 
         return data;
@@ -413,6 +430,7 @@ async function saveSessionReport(sessionId, reportData) {
         return null;
     }
 }
+
 
 /**
  * Log user activity
@@ -580,6 +598,47 @@ async function ensureUserGoals(userId) {
     }
 }
 
+/**
+ * Get a session by ID from the database
+ * @param {string} sessionId - Session ID to fetch
+ * @returns {Promise<object|null>} Session data or null if not found
+ */
+async function getSessionById(sessionId) {
+    if (!supabase) {
+        console.warn('Supabase not configured. Cannot fetch session.');
+        return null;
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('sessions')
+            .select('*')
+            .eq('id', sessionId)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                // No rows found
+                console.log(`Session not found in database: ${sessionId}`);
+                return null;
+            }
+            console.error('Error fetching session by ID:', error);
+            throw error;
+        }
+
+        console.log(`[Database] Session fetched: ${sessionId}`, {
+            hasReport: !!data.final_report,
+            status: data.status,
+            score: data.overall_score
+        });
+
+        return data;
+    } catch (error) {
+        console.error('Failed to fetch session by ID:', sessionId, error);
+        throw error; // Re-throw instead of silently returning null
+    }
+}
+
 module.exports = {
     createSession,
     saveQuestion,
@@ -594,4 +653,5 @@ module.exports = {
     updateUserProgress,
     updateUserSkills,
     ensureUserGoals,
+    getSessionById,
 };

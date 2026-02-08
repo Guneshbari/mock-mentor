@@ -79,7 +79,8 @@ create table public.sessions (
   started_at timestamptz default now(),
   ended_at timestamptz,
   final_report jsonb,      -- Store the complete JSON report
-  overall_score integer    -- Store overall score for quick sorting/filtering
+  overall_score integer,    -- Store overall score for quick sorting/filtering
+  updated_at timestamptz default now()
 );
 
 -- 5. SESSION QUESTIONS

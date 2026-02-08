@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,13 +23,15 @@ import {
     Play,
     Download,
     Filter,
-    Loader2
+    Loader2,
+    X
 } from "lucide-react";
 import { getSessionHistory, getSessionDetail, type Session, type SessionDetail, type DashboardStats } from "@/lib/api/dashboard";
 import { getDashboardStats } from "@/lib/api/dashboard";
 import { formatSessionDate, getRelativeTime } from "@/lib/utils/timezone";
 
 export function SessionsSection() {
+    const router = useRouter();
     const [searchQuery, setSearchQuery] = useState("");
     const [filterType, setFilterType] = useState("all");
     const [sortBy, setSortBy] = useState<"date" | "score">("date");
@@ -125,6 +128,9 @@ export function SessionsSection() {
             setError('Failed to download session');
         }
     };
+
+    // Handle view report
+    
 
     const getScoreColor = (score: number) => {
         if (score >= 85) return "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20";
@@ -353,6 +359,7 @@ export function SessionsSection() {
                                             )}
                                             <span className="hidden sm:inline">Review</span>
                                         </Button>
+                                        {/* Report button removed */}
                                         <Button
                                             variant="ghost"
                                             size="icon-sm"
@@ -390,8 +397,18 @@ export function SessionsSection() {
             )}
             {/* Session Review Modal */}
             <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
-                <DialogContent className="max-w-[90vw] w-[1200px] sm:max-w-[90vw] max-h-[90vh] overflow-y-auto pt-12">
-                    <DialogHeader>
+                <DialogContent className="max-w-[90vw] w-[1200px] sm:max-w-[90vw] max-h-[90vh] overflow-y-auto">
+                    <div className="absolute top-4 right-4 z-50">
+                        <button
+                            onClick={() => setShowReviewModal(false)}
+                            className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm border border-border hover:bg-accent transition-all flex items-center justify-center"
+                            aria-label="Close"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
+
+                    <DialogHeader className="pr-12">
                         <DialogTitle className="flex items-center gap-2 text-2xl">
                             {selectedSession?.role} Interview Review
                             {selectedSession?.score && (

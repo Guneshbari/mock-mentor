@@ -300,27 +300,67 @@ async function processNextStep(sessionId, previousAnswerText) {
  * @returns {Promise<object>} Final report
  */
 async function getFinalReport(sessionId) {
-  // Validate session exists
-  if (!hasSession(sessionId)) {
-    throw new Error('Invalid sessionId');
-  }
+  console.log(`[Interview Service] getFinalReport called for sessionId: ${sessionId}`);
+  
+  // First, try to get from in-memory store
+  if (hasSession(sessionId)) {
+    console.log(`[Interview Service] Session found in memory store`);
+    const interviewState = getSession(sessionId);
 
-  const interviewState = getSession(sessionId);
-
-  // If report doesn't exist yet, generate it (shouldn't happen in normal flow)
-  if (!interviewState.finalReport) {
-    // Generate report if all questions are answered
-    if (interviewState.history.length >= interviewState.totalSteps) {
-      interviewState.finalReport = await aiService.generateFinalReport(interviewState);
-      setSession(sessionId, interviewState);
-    } else {
-      throw new Error('Interview not completed yet');
+    // If report doesn't exist yet, generate it (shouldn't happen in normal flow)
+    if (!interviewState.finalReport) {
+      // Generate report if all questions are answered
+      if (interviewState.history.length >= interviewState.totalSteps) {
+        interviewState.finalReport = await aiService.generateFinalReport(interviewState);
+        setSession(sessionId, interviewState);
+      } else {
+        throw new Error('Interview not completed yet');
+      }
     }
+
+    return {
+      finalReport: interviewState.finalReport,
+    };
   }
 
-  return {
-    finalReport: interviewState.finalReport,
-  };
+  // If not in memory, try to fetch from database
+  console.log(`[Interview Service] Session not in memory, checking database for sessionId: ${sessionId}`);
+  
+  try {
+    const { getSessionById } = require('./database.service');
+    console.log(`[Interview Service] Calling getSessionById with: ${sessionId}`);
+    const sessionData = await getSessionById(sessionId);
+
+    console.log(`[Interview Service] getSessionById returned:`, sessionData ? 'data object' : 'null');
+
+    if (!sessionData) {
+      console.error(`[Interview Service] Session not found in database: ${sessionId}`);
+      throw new Error('Session not found in database');
+    }
+
+    console.log(`[Interview Service] Session found in database:`, {
+      hasReport: !!sessionData.final_report,
+      status: sessionData.status,
+      score: sessionData.overall_score
+    });
+
+    if (!sessionData.final_report) {
+      console.error(`[Interview Service] Final report not generated for session: ${sessionId}, status: ${sessionData.status}`);
+      throw new Error('Interview report not yet generated. Please wait a moment and try again.');
+    }
+
+    console.log(`[Interview Service] Returning report from database for session: ${sessionId}`);
+    return {
+      finalReport: sessionData.final_report,
+    };
+  } catch (error) {
+    console.error(`[Interview Service] Error fetching report from database:`, {
+      message: error.message,
+      stack: error.stack
+    });
+    // Preserve the original error message to help with debugging
+    throw error;
+  }
 }
 
 module.exports = {

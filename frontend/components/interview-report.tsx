@@ -34,10 +34,11 @@ interface AudioSummary {
 interface InterviewReportSummaryProps {
   evaluationResults: InterviewEvaluationResults;
   onRestartInterview: () => void;
+  onGoToDashboard: () => void;
   audioSummary?: AudioSummary;
 }
 
-export function InterviewReportSummary({ evaluationResults, onRestartInterview, audioSummary }: InterviewReportSummaryProps) {
+export function InterviewReportSummary({ evaluationResults, onRestartInterview, onGoToDashboard, audioSummary }: InterviewReportSummaryProps) {
   const [isSpeakingSummary, setIsSpeakingSummary] = useState(false);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
 
@@ -113,7 +114,54 @@ export function InterviewReportSummary({ evaluationResults, onRestartInterview, 
 
   return (
     <div className="min-h-screen page-gradient-bg p-4 lg:p-6 pt-14">
-      <div className="max-w-6xl mx-auto flex flex-col gap-6 animate-fade-up">
+      {/* Sticky Header with Action Buttons */}
+      <div className="fixed top-14 left-0 right-0 z-40 bg-gradient-to-b from-background via-background to-background/80 backdrop-blur-sm px-4 py-3 border-b border-border/50">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-3 flex-wrap">
+          {/* Audio Summary Button */}
+          {audioSummary && (
+            <Button
+              onClick={() => isSpeakingSummary ? stopSpeaking() : speakSummary()}
+              variant="outline"
+              size="sm"
+              className={`audio-summary-button font-medium border-border text-foreground hover:scale-[1.02] transition-all duration-200 bg-transparent ${isSpeakingSummary ? 'border-primary text-primary' : ''}`}
+            >
+              {isSpeakingSummary ? (
+                <>
+                  <VolumeX className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Stop</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Listen</span>
+                </>
+              )}
+            </Button>
+          )}
+
+          <Button
+            onClick={onRestartInterview}
+            variant="outline"
+            size="sm"
+            className="restart-interview-button font-medium border-border text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary hover:scale-[1.02] transition-all duration-200 bg-transparent"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Start New</span>
+          </Button>
+
+          <Button
+            onClick={onGoToDashboard}
+            variant="default"
+            size="sm"
+            className="go-to-dashboard-button font-medium hover:scale-[1.02] transition-all duration-200 bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
+            <CheckCircle className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Go to Dashboard</span>
+          </Button>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto flex flex-col gap-6 animate-fade-up pt-20">
         {/* Header */}
         <Card className="report-header-card elevation-3 border-border/30 glass-card">
           <CardHeader className="text-center pb-6">
@@ -334,45 +382,6 @@ export function InterviewReportSummary({ evaluationResults, onRestartInterview, 
             </CardContent>
           </Card>
         )}
-
-        {/* Footer with Audio Summary and Restart Button */}
-        <div className="report-footer-section pt-2 pb-8">
-          <Separator className="mb-6" />
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-3">
-            {/* Audio Summary Button */}
-            {audioSummary && (
-              <Button
-                onClick={() => isSpeakingSummary ? stopSpeaking() : speakSummary()}
-                variant="outline"
-                size="lg"
-                className={`audio-summary-button font-medium border-border text-foreground hover:scale-[1.02] transition-all duration-200 bg-transparent ${isSpeakingSummary ? 'border-primary text-primary' : ''
-                  }`}
-              >
-                {isSpeakingSummary ? (
-                  <>
-                    <VolumeX className="h-4 w-4 mr-2" />
-                    Stop Audio Summary
-                  </>
-                ) : (
-                  <>
-                    <Volume2 className="h-4 w-4 mr-2" />
-                    Listen to Summary
-                  </>
-                )}
-              </Button>
-            )}
-
-            <Button
-              onClick={onRestartInterview}
-              variant="outline"
-              size="lg"
-              className="restart-interview-button font-medium border-border text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary hover:scale-[1.02] transition-all duration-200 bg-transparent"
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Start New Interview
-            </Button>
-          </div>
-        </div>
       </div>
     </div>
   );
