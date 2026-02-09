@@ -3,6 +3,7 @@ const supabase = require('../services/supabase');
 /**
  * Middleware to extract authenticated user from Supabase JWT
  * Adds req.userId if user is authenticated
+ * Includes retry logic for network errors
  */
 async function extractUser(req, res, next) {
     try {
@@ -30,30 +31,63 @@ async function extractUser(req, res, next) {
             return next();
         }
 
-        // Verify token and get user
+        // Verify token with retry logic for network errors
         console.log('[Auth Middleware] Verifying token with Supabase...');
-        const { data: { user }, error } = await supabase.auth.getUser(token);
+        const maxRetries = 3;
+        let lastError = null;
 
-        if (error) {
-            console.warn('[Auth Middleware] Token verification failed:', error.message);
-            req.userId = null;
-            return next();
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser(token);
+
+                if (error) {
+                    console.warn(`[Auth Middleware] Token verification failed (attempt ${attempt}/${maxRetries}):`, error.message);
+
+                    // If it's an authentication error (not network), don't retry
+                    if (!error.message.includes('fetch failed') && !error.message.includes('socket')) {
+                        req.userId = null;
+                        return next();
+                    }
+
+                    lastError = error;
+
+                    // Wait before retry (exponential backoff)
+                    if (attempt < maxRetries) {
+                        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 3000); // Cap at 3 seconds
+                        console.log(`[Auth Middleware] Retrying in ${delay}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+                } else if (user) {
+                    // Success!
+                    req.userId = user.id;
+                    req.user = user;
+                    console.log(`[Auth Middleware] ✓ Authenticated user: ${user.id}` + (attempt > 1 ? ` (succeeded on attempt ${attempt})` : ''));
+                    return next();
+                } else {
+                    console.warn('[Auth Middleware] No user returned from token');
+                    req.userId = null;
+                    return next();
+                }
+            } catch (networkError) {
+                lastError = networkError;
+                console.warn(`[Auth Middleware] Network error (attempt ${attempt}/${maxRetries}):`, networkError.message);
+
+                if (attempt < maxRetries) {
+                    const delay = Math.min(1000 * Math.pow(2, attempt - 1), 3000);
+                    console.log(`[Auth Middleware] Retrying in ${delay}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    continue;
+                }
+            }
         }
 
-        if (!user) {
-            console.warn('[Auth Middleware] No user returned from token');
-            req.userId = null;
-            return next();
-        }
-
-        // Attach user ID to request
-        req.userId = user.id;
-        req.user = user; // Optional: include full user object
-
-        console.log(`[Auth Middleware] ✓ Authenticated user: ${user.id}`);
-        next();
+        // All retries failed
+        console.error('[Auth Middleware] All retry attempts failed:', lastError?.message);
+        req.userId = null;
+        next(); // Continue without auth rather than blocking the request
     } catch (error) {
-        console.error('[Auth Middleware] ERROR:', error.message);
+        console.error('[Auth Middleware] UNEXPECTED ERROR:', error.message);
         req.userId = null;
         next(); // Continue even if auth fails
     }

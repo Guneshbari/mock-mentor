@@ -254,7 +254,7 @@ async function getUserProfile(userId) {
     try {
         const { data, error } = await supabase
             .from('users')
-            .select('full_name, name')
+            .select('name')
             .eq('id', userId)
             .single();
 
@@ -436,9 +436,10 @@ async function saveSessionReport(sessionId, reportData) {
  * Log user activity
  * @param {string} userId - User UUID
  * @param {string} action - Activity type (e.g., 'session_start', 'session_end')
+ * @param {string} ipAddress - Optional IP address of the user
  * @returns {Promise<void>}
  */
-async function logActivity(userId, action) {
+async function logActivity(userId, action, ipAddress = null) {
     if (!supabase) return;
 
     try {
@@ -447,6 +448,7 @@ async function logActivity(userId, action) {
             .insert({
                 user_id: userId,
                 action: action,
+                ip_address: ipAddress,
                 timestamp: new Date().toISOString()
             });
     } catch (error) {
@@ -580,7 +582,10 @@ async function ensureUserGoals(userId) {
             if (onboarding && onboarding.goals && Array.isArray(onboarding.goals)) {
                 const goalsToInsert = onboarding.goals.map(goal => ({
                     user_id: userId,
-                    description: goal, // Assuming 'description' column based on standard practice
+                    goal_type: goal.toLowerCase().replace(/\s+/g, '_'), // e.g., 'Land First Job' -> 'land_first_job'
+                    goal_name: goal,
+                    target_value: 100, // Default target
+                    current_value: 0,
                     status: 'active',
                     created_at: new Date().toISOString()
                 }));
