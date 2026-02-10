@@ -35,8 +35,32 @@ async function startInterview(req, res) {
 
     console.log('User authentication status:', userId ? `Logged in as ${userId}` : 'Not logged in - database operations will be skipped');
 
+    // Fetch onboarding data for personalized AI questions
+    let onboardingData = null;
+    if (userId) {
+      try {
+        const { getUserOnboarding } = require('../services/database.service');
+        onboardingData = await getUserOnboarding(userId);
+        if (onboardingData) {
+          console.log('[startInterview] Onboarding data loaded for personalization:', {
+            profileTypes: onboardingData.profile_types,
+            experience: onboardingData.experience_years
+          });
+        }
+      } catch (err) {
+        console.warn('[startInterview] Failed to fetch onboarding data:', err.message);
+        // Continue without onboarding data - not critical
+      }
+    }
+
+    // Add onboarding data to interview config for AI personalization
+    const enhancedConfig = {
+      ...interviewConfig,
+      onboardingData
+    };
+
     // Delegate to service
-    const result = await interviewService.startInterview(interviewConfig, userId);
+    const result = await interviewService.startInterview(enhancedConfig, userId);
 
     // If audio mode is enabled, include speech params for the first question
     if (audioMode && result.firstQuestion) {
@@ -97,10 +121,15 @@ async function processNextStep(req, res) {
 
     console.log('Processing answer for session:', sessionId);
 
+    // Get authenticated userId (required by requireAuth middleware)
+    const userId = req.userId;
+
     // Delegate to service (backend is server-authoritative, uses session.currentStep)
+    // SECURITY: Pass userId for ownership validation
     const result = await interviewService.processNextStep(
       sessionId,
-      answerText
+      answerText,
+      userId  // Pass authenticated userId
     );
 
     // If audio mode is enabled and there's a next question (or elaborated question), include speech params
@@ -187,8 +216,12 @@ async function getFinalReport(req, res) {
     // Check if audio summary is requested
     const includeAudioSummary = req.query.audioSummary === 'true';
 
+    // Get authenticated userId (required by requireAuth middleware)
+    const userId = req.userId;
+
     // Delegate to service
-    const result = await interviewService.getFinalReport(sessionId);
+    // SECURITY: Pass userId for ownership validation
+    const result = await interviewService.getFinalReport(sessionId, userId);
 
     // If audio summary is requested, generate spoken summary
     if (includeAudioSummary && result.finalReport) {

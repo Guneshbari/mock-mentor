@@ -260,9 +260,13 @@ export function InterviewSessionPanel({
     setAudioError(null);
 
     try {
+      // Import auth headers helper
+      const { getAuthHeaders } = await import('@/lib/auth-headers');
+      const headers = await getAuthHeaders();
+
       const response = await fetch('/api/interview/transcribe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           audioAnswer: audioBase64,
           audioMimeType: 'audio/webm',

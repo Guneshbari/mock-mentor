@@ -126,8 +126,8 @@ app.use(express.urlencoded({
 // ============================================
 // AUTH MIDDLEWARE
 // ============================================
-const extractUser = require('./middleware/auth.middleware');
-app.use(extractUser); // Extract userId from Supabase JWT
+const { extractUser, requireAuth } = require('./middleware/auth.middleware');
+app.use(extractUser); // Extract userId from Supabase JWT (optional auth)
 
 // Ignore favicon requests
 app.get('/favicon.ico', (req, res) => {

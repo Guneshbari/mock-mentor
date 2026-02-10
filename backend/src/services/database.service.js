@@ -644,6 +644,33 @@ async function getSessionById(sessionId) {
     }
 }
 
+/**
+ * Get user's onboarding responses
+ * @param {string} userId - User UUID
+ * @returns {Promise<object|null>} Onboarding data including profile_types and experience_years
+ */
+async function getUserOnboarding(userId) {
+    if (!supabase) return null;
+
+    try {
+        const { data, error } = await supabase
+            .from('onboarding_responses')
+            .select('profile_types, experience_years, goals')
+            .eq('user_id', userId)
+            .single();
+
+        if (error) {
+            console.warn('[getUserOnboarding] No onboarding data found:', error.message);
+            return null;
+        }
+
+        return data;
+    } catch (error) {
+        console.error('[getUserOnboarding] Error:', error);
+        return null;
+    }
+}
+
 module.exports = {
     createSession,
     saveQuestion,
@@ -659,4 +686,5 @@ module.exports = {
     updateUserSkills,
     ensureUserGoals,
     getSessionById,
+    getUserOnboarding  // Export new function
 };

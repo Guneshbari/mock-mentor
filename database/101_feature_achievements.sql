@@ -22,11 +22,11 @@ alter table public.user_achievements enable row level security;
 -- RLS Policies
 create policy "Users can view own achievements" 
   on public.user_achievements for select 
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 create policy "Users can insert own achievements" 
   on public.user_achievements for insert 
-  with check (auth.uid() = user_id);
+  with check ((select auth.uid()) = user_id);
 
 -- Prevent duplicates: unique constraint on user_id + achievement_type
 create unique index unique_user_achievement 

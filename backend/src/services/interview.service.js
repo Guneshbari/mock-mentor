@@ -17,6 +17,46 @@ const PLACEHOLDER_QUESTIONS = [
   "What are your strengths and areas for improvement?",
 ];
 
+/**
+ * SECURITY: Validate session ownership to prevent IDOR attacks
+ * Checks both in-memory and database to ensure userId matches session owner
+ * @param {string} sessionId - Session identifier
+ * @param {string} userId - Authenticated user ID
+ * @throws {Error} If session doesn't belong to user or doesn't exist
+ */
+async function validateSessionOwnership(sessionId, userId) {
+  // Check in-memory session first
+  if (hasSession(sessionId)) {
+    const session = getSession(sessionId);
+    if (session.userId && session.userId !== userId) {
+      throw new Error('FORBIDDEN: Session does not belong to you');
+    }
+    // Session exists and belongs to user (or has no userId - legacy session)
+    return;
+  }
+
+  // If not in memory, check database
+  try {
+    const { getSessionById } = require('./database.service');
+    const sessionData = await getSessionById(sessionId);
+
+    if (!sessionData) {
+      throw new Error('Session not found');
+    }
+
+    if (sessionData.user_id !== userId) {
+      throw new Error('FORBIDDEN: Session does not belong to you');
+    }
+  } catch (error) {
+    // If it's already a forbidden error, rethrow it
+    if (error.message.includes('FORBIDDEN')) {
+      throw error;
+    }
+    // Otherwise, session not found
+    throw new Error('Session not found');
+  }
+}
+
 
 /**
  * Start a new interview session
@@ -129,9 +169,15 @@ async function startInterview(interviewConfig, userId = null) {
  * Backend is server-authoritative: uses session.currentStep as single source of truth
  * @param {string} sessionId - Session identifier
  * @param {string} previousAnswerText - Answer to the current question
+ * @param {string} userId - Authenticated user ID (REQUIRED for security)
  * @returns {Promise<object>} Next question or final report
  */
-async function processNextStep(sessionId, previousAnswerText) {
+async function processNextStep(sessionId, previousAnswerText, userId) {
+  // SECURITY: Validate session ownership first
+  if (userId) {
+    await validateSessionOwnership(sessionId, userId);
+  }
+
   // Validate session exists
   if (!hasSession(sessionId)) {
     throw new Error('Invalid sessionId');
@@ -299,9 +345,12 @@ async function processNextStep(sessionId, previousAnswerText) {
  * @param {string} sessionId - Session identifier
  * @returns {Promise<object>} Final report
  */
-async function getFinalReport(sessionId) {
-  console.log(`[Interview Service] getFinalReport called for sessionId: ${sessionId}`);
-  
+async function getFinalReport(sessionId, userId) {
+  // SECURITY: Validate session ownership first
+  if (userId) {
+    await validateSessionOwnership(sessionId, userId);
+  }
+
   // First, try to get from in-memory store
   if (hasSession(sessionId)) {
     console.log(`[Interview Service] Session found in memory store`);
@@ -325,7 +374,7 @@ async function getFinalReport(sessionId) {
 
   // If not in memory, try to fetch from database
   console.log(`[Interview Service] Session not in memory, checking database for sessionId: ${sessionId}`);
-  
+
   try {
     const { getSessionById } = require('./database.service');
     console.log(`[Interview Service] Calling getSessionById with: ${sessionId}`);

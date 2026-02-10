@@ -449,7 +449,9 @@ function DashboardContent() {
                                             <div className="text-sm text-muted-foreground">Loading achievements...</div>
                                         ) : achievements.length > 0 ? (
                                             achievements.map((achievement, index) => (
-                                                <AchievementBadge key={index} icon={achievement.icon} name={achievement.title} />
+                                                <div key={index} className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent/50 transition-colors">
+                                                    <span className="text-sm font-medium text-foreground">{achievement.title}</span>
+                                                </div>
                                             ))
                                         ) : (
                                             <div className="text-sm text-muted-foreground">No achievements yet. Keep practicing to earn your first badge!</div>

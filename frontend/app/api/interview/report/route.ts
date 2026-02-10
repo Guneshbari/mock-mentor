@@ -22,12 +22,19 @@ export async function GET(request: NextRequest) {
       queryString += '&audioSummary=true';
     }
 
+    // Forward Authorization header if present
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    const authHeader = request.headers.get('authorization');
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+
     // Forward request to backend
     const response = await fetch(`${BACKEND_URL}/api/interview/report?${queryString}`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     if (!response.ok) {
@@ -46,7 +53,7 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    
+
     // Response should contain finalReport according to mapping
     // Also include optional audioSummary if available
     return NextResponse.json({

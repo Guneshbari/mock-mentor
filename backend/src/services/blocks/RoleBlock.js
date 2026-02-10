@@ -6,7 +6,7 @@ class RoleBlock {
     constructor() { }
 
     execute(interviewConfig) {
-        const { interviewType, role, skills, resumeText, experiencePreset, candidateName } = interviewConfig;
+        const { interviewType, role, skills, resumeText, experiencePreset, candidateName, onboardingData } = interviewConfig;
 
         const skillsContext = skills && skills.length > 0
             ? `\n\n🎯 REQUIRED SKILLS (MUST TEST): ${skills.join(', ')}\nCRITICAL: You MUST verify these specific skills. Do not ignore them.`
@@ -14,6 +14,11 @@ class RoleBlock {
 
         const resumeContext = resumeText
             ? `\n\n📋 CANDIDATE CONTEXT (RESUME):\n${resumeText.substring(0, 1500)}\n\nINSTRUCTION: Use this resume to ask personalized questions about their actual past work.`
+            : '';
+
+        // NEW: Add onboarding context for AI personalization
+        const onboardingContext = onboardingData
+            ? `\n\n👤 CANDIDATE PROFILE (FROM ONBOARDING):\n- Profile Type(s): ${onboardingData.profile_types ? onboardingData.profile_types.join(', ') : 'Not specified'}\n- Experience Level: ${onboardingData.experience_years || 'Not specified'}\n- Career Goals: ${onboardingData.goals ? onboardingData.goals.join(', ') : 'Not specified'}\n\nINSTRUCTION: Tailor questions to align with their profile and goals. Consider if they are a career switcher, student, or experienced professional.`
             : '';
 
         const presetGuidance = this._getPresetGuidance(experiencePreset);
@@ -28,6 +33,7 @@ CONTEXT MAP:
 3. **Experience**: "${experiencePreset}" (See constraints below)
 ${skillsContext}
 ${resumeContext}
+${onboardingContext}
 
 ${presetGuidance}
 

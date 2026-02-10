@@ -1,6 +1,55 @@
 const supabase = require('../services/supabase');
 
 /**
+ * Update user's last login timestamp
+ * @param {string} userId - User UUID
+ */
+async function updateLastLogin(userId) {
+    if (!supabase) return;
+
+    try {
+        await supabase
+            .from('users')
+            .update({
+                last_login_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userId);
+    } catch (error) {
+        // Silent fail - don't block auth for this
+        console.warn('[updateLastLogin] Error:', error.message);
+    }
+}
+
+/**
+ * Check if user account is active
+ * @param {string} userId - User UUID
+ * @returns {Promise<boolean>} True if active, false if deactivated
+ */
+async function checkAccountActive(userId) {
+    if (!supabase) return true; // Default to active if DB unavailable
+
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('is_active')
+            .eq('id', userId)
+            .single();
+
+        if (error || !data) {
+            console.warn('[checkAccountActive] Error or no data:', error?.message);
+            return true; // Default to active on error
+        }
+
+        // is_active defaults to true in schema, so null/undefined = active
+        return data.is_active !== false;
+    } catch (error) {
+        console.warn('[checkAccountActive] Error:', error.message);
+        return true; // Default to active on error
+    }
+}
+
+/**
  * Middleware to extract authenticated user from Supabase JWT
  * Adds req.userId if user is authenticated
  * Includes retry logic for network errors
@@ -63,6 +112,21 @@ async function extractUser(req, res, next) {
                     req.userId = user.id;
                     req.user = user;
                     console.log(`[Auth Middleware] ✓ Authenticated user: ${user.id}` + (attempt > 1 ? ` (succeeded on attempt ${attempt})` : ''));
+
+                    // Check if account is active
+                    const isActive = await checkAccountActive(user.id);
+                    if (!isActive) {
+                        console.warn(`[Auth Middleware] Account deactivated: ${user.id}`);
+                        return res.status(403).json({
+                            error: 'Account deactivated. Please contact support.'
+                        });
+                    }
+
+                    // Update last_login_at asynchronously (don't block the request)
+                    updateLastLogin(user.id).catch(err =>
+                        console.warn('[Auth Middleware] Failed to update last_login_at:', err.message)
+                    );
+
                     return next();
                 } else {
                     console.warn('[Auth Middleware] No user returned from token');
@@ -93,4 +157,25 @@ async function extractUser(req, res, next) {
     }
 }
 
-module.exports = extractUser;
+/**
+ * Middleware to require authentication (fail-closed)
+ * MUST be used on all protected routes
+ * Returns 401 if user is not authenticated
+ */
+function requireAuth(req, res, next) {
+    if (!req.userId) {
+        console.warn('[requireAuth] Unauthorized access attempt');
+        return res.status(401).json({
+            error: 'Authentication required',
+            code: 'UNAUTHORIZED'
+        });
+    }
+
+    // User is authenticated, proceed
+    next();
+}
+
+module.exports = {
+    extractUser,     // Optional auth - populates req.userId if present
+    requireAuth      // Mandatory auth - fails if req.userId not present
+};

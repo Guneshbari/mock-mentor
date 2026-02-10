@@ -37,8 +37,14 @@ export default function InterviewReportPage() {
     // Fetch final report from backend (with audio summary if audio mode was enabled)
     const fetchReport = async () => {
       try {
+        // Import auth headers helper
+        const { getAuthHeaders } = await import('@/lib/auth-headers');
+        const headers = await getAuthHeaders();
+
         const audioParam = audioModeEnabled ? '&audioSummary=true' : '';
-        const response = await fetch(`/api/interview/report?sessionId=${sessionId}${audioParam}`);
+        const response = await fetch(`/api/interview/report?sessionId=${sessionId}${audioParam}`, {
+          headers,
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch report');
@@ -73,6 +79,9 @@ export default function InterviewReportPage() {
         if (data.audioSummary) {
           setAudioSummary(data.audioSummary);
         }
+
+        // Stop loading after successful data fetch
+        setIsLoading(false);
       } catch (err) {
         console.error('Error fetching report:', err);
         setError(err instanceof Error ? err.message : 'Failed to load report');

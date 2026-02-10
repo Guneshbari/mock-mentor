@@ -167,6 +167,12 @@ export function ProfileSection({ user }: { user: any }) {
                 setUploadingAvatar(true);
                 const result = await profileAPI.uploadAvatar(file);
                 setAvatar(result.avatarUrl);
+
+                // Trigger event to update avatar in navbar
+                window.dispatchEvent(new CustomEvent('avatarUpdated', {
+                    detail: { avatarUrl: result.avatarUrl }
+                }));
+
                 toast.success('Avatar uploaded successfully!');
             } catch (error) {
                 console.error('Failed to upload avatar:', error);
@@ -219,6 +225,19 @@ export function ProfileSection({ user }: { user: any }) {
         try {
             setChangingPassword(true);
             await profileAPI.changePassword(currentPassword, newPassword);
+
+            // CRITICAL: Password change invalidates all sessions
+            // Refresh the session to get a new token
+            const supabase = createClient();
+            const { data, error } = await supabase.auth.refreshSession();
+
+            if (error) {
+                console.error('Failed to refresh session after password change:', error);
+                toast.warning('Password changed but session refresh failed. Please log in again if you experience issues.');
+            } else {
+                console.log('Session refreshed successfully after password change');
+            }
+
             toast.success('Password changed successfully!');
 
             // Reset form and close dialog

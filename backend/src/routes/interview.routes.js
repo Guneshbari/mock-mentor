@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const interviewController = require('../controllers/interview.controller');
-const extractUser = require('../middleware/auth.middleware');
+const { requireAuth } = require('../middleware/auth.middleware');
 
-// Apply auth middleware to all routes (optional auth - continues even if not authenticated)
-router.use(extractUser);
+// SECURITY: All interview routes require authentication
+// extractUser is already applied globally in app.js
+// requireAuth enforces fail-closed security
+router.use(requireAuth);
 
 // POST /api/interview/start - Initialize interview session
 router.post('/start', interviewController.startInterview);
@@ -16,6 +18,8 @@ router.post('/next', interviewController.processNextStep);
 router.post('/transcribe', interviewController.transcribeAudio);
 
 // GET /api/interview/report - Get final report
+// SECURITY: Changed from query param to require sessionId in body (via POST)
+// TODO: Migrate to POST /api/interview/report with body instead of GET
 router.get('/report', interviewController.getFinalReport);
 
 module.exports = router;

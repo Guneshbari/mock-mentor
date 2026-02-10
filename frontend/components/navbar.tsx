@@ -21,6 +21,7 @@ export function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -30,12 +31,48 @@ export function Navbar() {
             setUser(user);
             setLoading(false);
 
-            const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            // Fetch profile avatar if user is logged in
+            if (user) {
+                try {
+                    const { getUserProfile } = await import('@/lib/api/profile');
+                    const profile = await getUserProfile();
+                    if (profile?.avatar) {
+                        setProfileAvatar(profile.avatar);
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch profile avatar for navbar:', error);
+                }
+            }
+
+            const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
                 setUser(session?.user ?? null);
+
+                // Fetch avatar when user logs in
+                if (session?.user) {
+                    try {
+                        const { getUserProfile } = await import('@/lib/api/profile');
+                        const profile = await getUserProfile();
+                        if (profile?.avatar) {
+                            setProfileAvatar(profile.avatar);
+                        }
+                    } catch (error) {
+                        console.error('Failed to fetch avatar on login:', error);
+                    }
+                } else {
+                    setProfileAvatar(null);
+                }
             });
+
+            // Listen for avatar updates from profile section
+            const handleAvatarUpdate = (event: CustomEvent) => {
+                setProfileAvatar(event.detail.avatarUrl);
+            };
+
+            window.addEventListener('avatarUpdated', handleAvatarUpdate as EventListener);
 
             return () => {
                 subscription.unsubscribe();
+                window.removeEventListener('avatarUpdated', handleAvatarUpdate as EventListener);
             };
         };
         checkUser();
@@ -107,7 +144,7 @@ export function Navbar() {
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-transparent hover:ring-primary/20">
                                         <Avatar className="h-9 w-9 border border-border bg-muted">
-                                            <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email || "User"} />
+                                            <AvatarImage src={profileAvatar || user.user_metadata?.avatar_url} alt={user.email || "User"} />
                                             <AvatarFallback className="bg-primary/10 text-primary font-medium">
                                                 {user.email?.charAt(0).toUpperCase() || "U"}
                                             </AvatarFallback>

@@ -17,6 +17,6 @@ create table if not exists public.user_achievements (
 alter table public.user_achievements enable row level security;
 
 -- Policies
-create policy "Users can view own achievements" on public.user_achievements for select using (auth.uid() = user_id);
+create policy "Users can view own achievements" on public.user_achievements for select using ((select auth.uid()) = user_id);
 -- Insert is usually doing by system/service with service role, but for now allow user to insert if triggered by own action
-create policy "Users can insert own achievements" on public.user_achievements for insert with check (auth.uid() = user_id); 
+create policy "Users can insert own achievements" on public.user_achievements for insert with check ((select auth.uid()) = user_id); 

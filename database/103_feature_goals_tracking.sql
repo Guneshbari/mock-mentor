@@ -32,19 +32,19 @@ alter table public.user_goals enable row level security;
 -- RLS Policies
 create policy "Users can view own goals" 
   on public.user_goals for select 
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 create policy "Users can insert own goals" 
   on public.user_goals for insert 
-  with check (auth.uid() = user_id);
+  with check ((select auth.uid()) = user_id);
 
 create policy "Users can update own goals" 
   on public.user_goals for update 
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 create policy "Users can delete own goals" 
   on public.user_goals for delete 
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 -- Function to automatically update updated_at timestamp
 create or replace function update_user_goals_updated_at()
@@ -53,7 +53,7 @@ begin
   new.updated_at = now();
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql set search_path = public, pg_temp;
 
 -- Trigger to update updated_at
 create trigger update_user_goals_timestamp

@@ -16,7 +16,7 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public, pg_temp;
 
 -- Create trigger to automatically update updated_at on row updates
 DROP TRIGGER IF EXISTS sessions_updated_at_trigger ON public.sessions;

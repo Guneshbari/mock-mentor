@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const dashboardController = require('../controllers/dashboard.controller');
-const extractUser = require('../middleware/auth.middleware');
+const { requireAuth } = require('../middleware/auth.middleware');
 
 // Configure multer for memory storage
 const upload = multer({
@@ -12,8 +12,10 @@ const upload = multer({
     }
 });
 
-// Apply auth middleware to all dashboard routes
-router.use(extractUser);
+// SECURITY: All dashboard routes require authentication
+// extractUser is already applied globally in app.js
+// requireAuth enforces fail-closed security
+router.use(requireAuth);
 
 // GET /api/dashboard/stats - Get user statistics
 router.get('/stats', dashboardController.getStatistics);

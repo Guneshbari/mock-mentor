@@ -20,7 +20,7 @@ alter table public.pro_tips enable row level security;
 -- RLS Policy - all authenticated users can read active tips
 create policy "Authenticated users can view active tips" 
   on public.pro_tips for select 
-  using (auth.role() = 'authenticated' and is_active = true);
+  using ((SELECT auth.role()) = 'authenticated' and is_active = true);
 
 -- Seed initial pro tips
 insert into public.pro_tips (tip_text, category) values

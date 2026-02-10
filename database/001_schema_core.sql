@@ -148,19 +148,19 @@ alter table public.user_progress enable row level security;
 alter table public.user_activity enable row level security;
 
 -- Basic Policies (Users can only read/write their own data)
-create policy "Users can view own profile" on public.users for select using (auth.uid() = id);
-create policy "Users can update own profile" on public.users for update using (auth.uid() = id);
+create policy "Users can view own profile" on public.users for select using ((select auth.uid()) = id);
+create policy "Users can update own profile" on public.users for update using ((select auth.uid()) = id);
 
-create policy "Users can view own preferences" on public.user_preferences for select using (auth.uid() = user_id);
-create policy "Users can insert own preferences" on public.user_preferences for insert with check (auth.uid() = user_id);
-create policy "Users can update own preferences" on public.user_preferences for update using (auth.uid() = user_id);
+create policy "Users can view own preferences" on public.user_preferences for select using ((select auth.uid()) = user_id);
+create policy "Users can insert own preferences" on public.user_preferences for insert with check ((select auth.uid()) = user_id);
+create policy "Users can update own preferences" on public.user_preferences for update using ((select auth.uid()) = user_id);
 
-create policy "Users can view own onboarding" on public.onboarding_responses for select using (auth.uid() = user_id);
-create policy "Users can insert own onboarding" on public.onboarding_responses for insert with check (auth.uid() = user_id);
-create policy "Users can update own onboarding" on public.onboarding_responses for update using (auth.uid() = user_id);
+create policy "Users can view own onboarding" on public.onboarding_responses for select using ((select auth.uid()) = user_id);
+create policy "Users can insert own onboarding" on public.onboarding_responses for insert with check ((select auth.uid()) = user_id);
+create policy "Users can update own onboarding" on public.onboarding_responses for update using ((select auth.uid()) = user_id);
 
-create policy "Users can view sessions" on public.sessions for select using (auth.uid() = user_id);
-create policy "Users can insert sessions" on public.sessions for insert with check (auth.uid() = user_id);
-create policy "Users can update sessions" on public.sessions for update using (auth.uid() = user_id);
+create policy "Users can view sessions" on public.sessions for select using ((select auth.uid()) = user_id);
+create policy "Users can insert sessions" on public.sessions for insert with check ((select auth.uid()) = user_id);
+create policy "Users can update sessions" on public.sessions for update using ((select auth.uid()) = user_id);
 
 -- (Add similar policies for other tables as needed)

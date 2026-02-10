@@ -12,7 +12,7 @@ begin
   );
   return new;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public, pg_temp;
 
 -- One-time sync for existing users who might have empty names but have it in their auth metadata
 -- This is a safe way to backfill missing names in the public.users table
