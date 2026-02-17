@@ -1,7 +1,8 @@
 /**
  * QuestionGeneratorBlock - Groq/Gemini Version
  * STRICT non-repetition with topic/intent tracking and dimension-shifting follow-ups
- * NOW ENFORCING: 5-Step Logic Roadmaps per Role AND Experience Level AND Interview Type (45 Questions/Role)
+ * NOW ENFORCING: Dynamic Logic Roadmaps per Role AND Experience Level AND Interview Type
+ * Question count varies: Fresh (5), Junior (7), Senior (10)
  */
 const AnswerAnalyzer = require('./AnswerAnalyzer');
 const { MASTER_ROADMAPS, INTERVIEW_TYPE_STRATEGIES } = require('./RoleStrategies');
@@ -32,7 +33,7 @@ class QuestionGeneratorBlock {
 TASK: Generate the FIRST interview question for ${interviewConfig.role} (${level.toUpperCase()} Level).
 
 STRICT REQUIREMENT: You MUST ask a question about "${targetTopic}".
-This is Step 1 of 5 in the ${interviewConfig.interviewType} roadmap.
+This is the first step in the ${interviewConfig.interviewType} roadmap.
 
 FORBIDDEN GENERIC QUESTIONS:
 ❌ "Tell me about yourself"
@@ -86,7 +87,7 @@ Q: "${previousQuestion}"
 A: "${previousAnswer}"
 
 === INTERVIEW ROADMAP ENFORCEMENT ===
-Current Stage: ${currentStepIndex + 1} of 5
+Current Stage: ${currentStepIndex + 1}
 Topic Level: ${level.toUpperCase()}
 MANDATORY TOPIC: "${targetTopic}"
 

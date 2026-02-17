@@ -3,6 +3,7 @@ const { getSession, setSession, hasSession } = require('../store/session.store')
 const { TOTAL_QUESTIONS } = require('../utils/constants');
 const aiService = require('./ai.service');
 const databaseService = require('./database.service');
+const emailService = require('./email.service');
 
 // Dynamic round management - minimum 5, maximum 10
 const MIN_ROUNDS = 5;
@@ -285,6 +286,38 @@ async function processNextStep(sessionId, previousAnswerText, userId) {
               interviewState.interviewConfig.role,
               interviewState.finalReport.overallScore || 0
             );
+          }
+
+          // Send interview completion email
+          try {
+            const userProfile = await databaseService.getUserProfile(interviewState.userId);
+            
+            // Check if user has email notifications enabled
+            if (userProfile && userProfile.email) {
+              const preferences = await databaseService.getUserPreferences(interviewState.userId);
+              
+              // Only send email if user hasn't explicitly disabled notifications
+              if (!preferences || preferences.email_notifications !== false) {
+                const sessionData = {
+                  jobRole: interviewState.interviewConfig.role,
+                  totalQuestions: interviewState.history.length,
+                  overallScore: interviewState.finalReport.overallScore,
+                  strengths: interviewState.finalReport.strengths,
+                  improvements: interviewState.finalReport.improvements
+                };
+
+                await emailService.sendInterviewCompletionEmail(
+                  userProfile.email,
+                  userProfile.name || userProfile.full_name,
+                  sessionData
+                );
+                
+                console.log('✅ Interview completion email sent to:', userProfile.email);
+              }
+            }
+          } catch (emailError) {
+            // Don't fail the session if email sending fails
+            console.error('Failed to send interview completion email:', emailError.message);
           }
         }
       }

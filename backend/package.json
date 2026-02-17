@@ -23,7 +23,8 @@
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "groq-sdk": "*",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "nodemailer": "^8.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.0"

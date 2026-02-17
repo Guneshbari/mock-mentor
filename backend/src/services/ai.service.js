@@ -25,11 +25,23 @@ const elaborationBlock = new QuestionElaborationBlock(aiService);
 // --- Public API (Facade) ---
 
 /**
- * Determine the interview rounds based on type
+ * Determine the interview rounds based on experience level
+ * - Fresh Graduate / Entry Level: 5 questions
+ * - Junior (1-3 years): 7 questions
+ * - Senior (3+ years): 10 questions
  */
 function determineTotalRounds(interviewState) {
-  // STRICT RULE: All interviews are now 5 questions exactly as per user request
-  return 5;
+  const experiencePreset = interviewState?.interviewConfig?.experiencePreset;
+
+  // Map experience level to question count
+  const questionCountMap = {
+    'fresh': 5,   // Fresh Graduate / Entry Level
+    'junior': 7,  // Junior (1-3 years)
+    'senior': 10  // Senior (3+ years)
+  };
+
+  // Return mapped count or default to 5 questions
+  return questionCountMap[experiencePreset] || 5;
 }
 
 /**
