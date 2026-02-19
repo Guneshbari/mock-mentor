@@ -65,4 +65,7 @@ router.get('/pro-tips', dashboardController.getProTips);
 // GET /api/dashboard/goals/performance - Get goals performance trend
 router.get('/goals/performance', dashboardController.getGoalsPerformanceTrend);
 
+// POST /api/dashboard/onboarding - Save onboarding responses
+router.post('/onboarding', dashboardController.saveOnboarding);
+
 module.exports = router;

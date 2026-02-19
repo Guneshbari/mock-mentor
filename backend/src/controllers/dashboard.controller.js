@@ -1,5 +1,6 @@
 const dashboardService = require('../services/dashboard.service');
 const profileService = require('../services/profile.service');
+const supabase = require('../services/supabase');
 
 /**
  * Dashboard Controller - Handle HTTP requests for dashboard data
@@ -555,6 +556,91 @@ async function getSessionDetail(req, res) {
     }
 }
 
+/**
+ * Save onboarding responses
+ * POST /api/dashboard/onboarding
+ * Ensures user exists in public.users table before saving onboarding data
+ */
+async function saveOnboarding(req, res) {
+    try {
+        const userId = req.userId;
+        const user = req.user;
+
+        if (!userId) {
+            return res.status(401).json({
+                error: 'Unauthorized',
+                message: 'User ID not found in request'
+            });
+        }
+
+        const { profile_types, experience_years, goals } = req.body;
+
+        if (!profile_types || !goals) {
+            return res.status(400).json({
+                error: 'Bad request',
+                message: 'profile_types and goals are required'
+            });
+        }
+
+        if (!supabase) {
+            return res.status(503).json({
+                error: 'Service unavailable',
+                message: 'Database not configured'
+            });
+        }
+
+        // Step 1: Ensure user exists in public.users (handles cleared tables)
+        const { error: userError } = await supabase
+            .from('users')
+            .upsert({
+                id: userId,
+                email: user?.email || 'unknown',
+                name: user?.user_metadata?.full_name || user?.user_metadata?.name || null,
+                profile_image_url: user?.user_metadata?.avatar_url || null,
+            }, { onConflict: 'id' });
+
+        if (userError) {
+            console.error('[saveOnboarding] User upsert error:', userError);
+            return res.status(500).json({
+                error: 'Internal server error',
+                message: 'Failed to initialize user profile'
+            });
+        }
+
+        // Step 2: Save onboarding responses
+        const { error: onboardingError } = await supabase
+            .from('onboarding_responses')
+            .upsert({
+                user_id: userId,
+                profile_types,
+                experience_years: experience_years || null,
+                goals,
+                updated_at: new Date().toISOString(),
+            });
+
+        if (onboardingError) {
+            console.error('[saveOnboarding] Onboarding save error:', onboardingError);
+            return res.status(500).json({
+                error: 'Internal server error',
+                message: 'Failed to save onboarding responses'
+            });
+        }
+
+        console.log(`[saveOnboarding] ✓ Onboarding saved for user: ${userId}`);
+        return res.status(200).json({
+            success: true,
+            message: 'Onboarding completed successfully'
+        });
+
+    } catch (error) {
+        console.error('Error in saveOnboarding controller:', error);
+        return res.status(500).json({
+            error: 'Internal server error',
+            message: 'Failed to save onboarding data'
+        });
+    }
+}
+
 module.exports = {
     getStatistics,
     getSessionHistory,
@@ -571,5 +657,6 @@ module.exports = {
     changePassword,
     getAchievements,
     getProTips,
-    getGoalsPerformanceTrend
+    getGoalsPerformanceTrend,
+    saveOnboarding
 };

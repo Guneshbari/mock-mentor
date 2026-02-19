@@ -53,8 +53,12 @@ export default function LoginPage() {
 
             console.log('✅ Login successful!');
             toast.success("Logged in successfully");
-            console.log('🔀 Redirecting to /dashboard...');
-            router.push("/dashboard");
+
+            // Check if user has completed onboarding
+            const onboardingCompleted = data.user?.user_metadata?.onboarding_completed;
+            const redirectTo = onboardingCompleted ? "/dashboard" : "/onboarding";
+            console.log(`🔀 Redirecting to ${redirectTo}... (onboarding_completed: ${onboardingCompleted})`);
+            router.push(redirectTo);
             router.refresh();
         } catch (error) {
             console.error('💥 Unexpected error:', error);

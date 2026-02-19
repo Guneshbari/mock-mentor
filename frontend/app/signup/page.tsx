@@ -64,6 +64,7 @@ export default function SignupPage() {
                         full_name: fullName,
                         name: fullName, // Added for compatibility with some triggers/OAuth patterns
                     },
+                    emailRedirectTo: `${window.location.origin}/onboarding`,
                 },
             });
 
@@ -73,7 +74,7 @@ export default function SignupPage() {
             }
 
             toast.success("Account created successfully!");
-            router.push("/dashboard");
+            router.push("/onboarding");
         } catch (error) {
             setError("An unexpected error occurred");
         } finally {

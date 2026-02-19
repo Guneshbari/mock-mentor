@@ -45,31 +45,35 @@ export default function OnboardingPage() {
         setLoading(true);
         try {
             const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { session } } = await supabase.auth.getSession();
 
-            if (!user) {
+            if (!session) {
                 toast.error("Not authenticated");
                 return;
             }
 
-            // Save onboarding responses to database
-            const { error: dbError } = await supabase
-                .from('onboarding_responses')
-                .upsert({
-                    user_id: user.id,
+            // Save onboarding via backend API (uses service role key, bypasses RLS)
+            const response = await fetch('http://localhost:8000/api/dashboard/onboarding', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
                     profile_types: profile,
-                    experience_years: experience[0] || null, // Take first selection
+                    experience_years: experience[0] || null,
                     goals: goals,
-                    updated_at: new Date().toISOString(),
-                });
+                }),
+            });
 
-            if (dbError) {
-                console.error("Database error:", dbError);
-                toast.error("Failed to save preferences");
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error("Onboarding save error:", errorData);
+                toast.error(errorData.message || "Failed to save preferences");
                 return;
             }
 
-            // Update user metadata to mark onboarding as complete (for middleware)
+            // Update user metadata to mark onboarding as complete (for redirect logic)
             const { error: authError } = await supabase.auth.updateUser({
                 data: {
                     onboarding_completed: true,
