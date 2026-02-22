@@ -73,23 +73,12 @@ export default function OnboardingPage() {
                 return;
             }
 
-            // Update user metadata to mark onboarding as complete (for redirect logic)
-            const { error: authError } = await supabase.auth.updateUser({
-                data: {
-                    onboarding_completed: true,
-                },
-            });
-
-            if (authError) {
-                toast.error("Failed to update user status");
-                return;
-            }
-
             toast.success("Profile setup complete!");
             router.push("/dashboard");
         } catch (error) {
             console.error("Unexpected error:", error);
-            toast.error("An unexpected error occurred");
+            const errMsg = error instanceof Error ? error.message : String(error);
+            toast.error(`Error: ${errMsg}`);
         } finally {
             setLoading(false);
         }

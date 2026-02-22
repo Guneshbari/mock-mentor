@@ -46,10 +46,6 @@ export default function InterviewReportPage() {
           headers,
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch report');
-        }
-
         const data = await response.json();
 
         // If backend returned an error shape, surface a friendly message
