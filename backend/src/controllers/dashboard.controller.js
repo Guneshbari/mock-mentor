@@ -626,6 +626,19 @@ async function saveOnboarding(req, res) {
             });
         }
 
+        // Step 3: Update user metadata to mark onboarding as complete
+        const { error: authUpdateError } = await supabase.auth.admin.updateUserById(userId, {
+            user_metadata: { onboarding_completed: true }
+        });
+
+        if (authUpdateError) {
+            console.error('[saveOnboarding] Auth metadata update error:', authUpdateError);
+            return res.status(500).json({
+                error: 'Internal server error',
+                message: 'Failed to update user onboarding status'
+            });
+        }
+
         console.log(`[saveOnboarding] ✓ Onboarding saved for user: ${userId}`);
         return res.status(200).json({
             success: true,
