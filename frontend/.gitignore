@@ -38,6 +38,9 @@ node_modules/
 *-out.txt
 output.txt
 test-out-new.txt
+*-utf8.txt
+test-final.txt
+test-output.txt
 *.json
 !package.json
 !tsconfig.json
