@@ -38,3 +38,12 @@ node_modules/
 *-out.txt
 output.txt
 test-out-new.txt
+*.json
+!package.json
+!tsconfig.json
+!playwright.config.ts
+
+# Utility debugging scripts
+extract-logs.js
+test-update-metadata.js
+check-metadata.js
