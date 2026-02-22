@@ -209,6 +209,43 @@ mock-mentor/
 
 ---
 
+## 🧪 E2E Testing Framework
+
+Mock Mentor utilizes [Playwright](https://playwright.dev/) for comprehensive End-to-End (E2E) UI and integration testing. The testing framework is specifically architected to run autonomously without requiring active SMTP/Email loops.
+
+### Available Test Suites
+
+| Suite                               | Description                                                                                                          | File                      |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| **Authentication & Onboarding**     | Tests new user login flows and the dashboard onboarding redirect cycle.                                              | `tests/auth.spec.ts`      |
+| **Generative Session Flow**         | Automates initiating an AI mock interview and successfully answering the first question.                             | `tests/interview.spec.ts` |
+| **Performance Report Finalization** | End-to-End automation answering all 5 questions sequentially and verifying the final numerical scorecard evaluation. | `tests/report.spec.ts`    |
+
+### Running Tests Locally
+
+Because the Next.js runtime requires the Supabase databases to populate credentials, use the provided Node.js wrapper scripts to seamlessly execute tests. These wrappers will natively handle the test runner configurations and ensure clean stdout logging:
+
+1. **Ensure the backend is running** on `http://localhost:8000`:
+   ```bash
+   cd backend && npm start
+   ```
+2. **Execute a standard test** from the `frontend/` directory:
+
+   ```bash
+   # Run the Onboarding Suite
+   node run-test.js
+
+   # Run the Generative Interview Suite
+   node run-interview-test.js
+
+   # Run the Complete Report Flow
+   node run-report-test.js
+   ```
+
+> **Note:** The backend contains Supabase Admin scripts (`setup-e2e-user.js`, `setup-interview-tester.js`) that automatically seed verified test profiles into your database to bypass email confirmation hurdles during the automated pipeline.
+
+---
+
 ## 🤝 Contributing
 
 We love contributions! Please follow these steps:

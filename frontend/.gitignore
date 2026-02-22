@@ -33,3 +33,8 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Test output logs
+*-out.txt
+output.txt
+test-out-new.txt
