@@ -144,14 +144,16 @@ mock-mentor/
 │
 └── supabase/                 # Database Schema & Migrations
 ```
+
 ## 🧪 Testing
 
 We use [Playwright](https://playwright.dev/) for End-to-End (E2E) testing to ensure the platform functions correctly across modern browsers (Chromium, Firefox, and WebKit).
 
 ### Prerequisites
+
 Before running the tests, ensure you have installed the necessary Playwright browsers by running the following command from the `frontend` directory:
 
-```bash
+````bash
 cd frontend
 npx playwright install --with-deps
 
@@ -173,7 +175,7 @@ npx playwright install --with-deps
    ```bash
    git clone https://github.com/yourusername/mock-mentor.git
    cd mock-mentor
-   ```
+````
 
 2. **Backend Setup**
 
