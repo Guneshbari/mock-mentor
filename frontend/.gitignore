@@ -33,3 +33,20 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Test output logs
+*-out.txt
+output.txt
+test-out-new.txt
+*-utf8.txt
+test-final.txt
+test-output.txt
+*.json
+!package.json
+!tsconfig.json
+!playwright.config.ts
+
+# Utility debugging scripts
+extract-logs.js
+test-update-metadata.js
+check-metadata.js
