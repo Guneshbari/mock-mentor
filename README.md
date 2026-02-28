@@ -21,7 +21,7 @@
 
 **Mock Mentor** is a cutting-edge AI interview platform designed to simulate real-world technical interviews. It uses **Groq's Ultra-Fast LPU™** technology with **Llama 3** models to provide intelligent, adaptive questioning and comprehensive evaluation with near-instant responses.
 
-Data persistence and authentication are powered by **Supabase**, offering a seamless and secure user experience.
+Data persistence and authentication are powered by **Supabase**(Checking the current DNS issues), offering a seamless and secure user experience.
 
 ---
 
